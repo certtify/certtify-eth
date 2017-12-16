@@ -1,5 +1,6 @@
 var Migrations = artifacts.require("./Migrations.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(Migrations);
+	// Deploy Migrations contact first
+	deployer.deploy(Migrations);
 };
