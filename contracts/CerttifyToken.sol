@@ -33,8 +33,10 @@ contract CerttifyToken is StandardToken {
         // no need to require value <= totalSupply, since that would imply the
         // sender's balance is greater than the totalSupply, which *should* be an assertion failure
         address burner = msg.sender;
-        balances[burner] = balances[burner].sub(_value);
+        // Burn!
         totalSupply = totalSupply.sub(_value);
+        balances[burner] = balances[burner].sub(_value);
+        // Log Burn event
         Burn(burner, _value, _wavesAddress);
     }
 

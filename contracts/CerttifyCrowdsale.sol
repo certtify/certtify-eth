@@ -137,12 +137,12 @@ contract CerttifyCrowdsale {
         weiRaised = weiRaised.add(weiAmount);
         // Update the amount of token sold
         tokenSold = tokenSold.add(tokens);
+        // Send fund to Ethereum collection address
+        forwardFunds();
         // Rewarding buyer the token
         token.transfer(beneficiary, tokens);
         // Log the purchase event
         TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
-        // Send fund to Ethereum collection address
-        forwardFunds();
     }
 
     /**
@@ -156,10 +156,10 @@ contract CerttifyCrowdsale {
         require(tokens > 0);
         require(tokenSold.add(tokens) <= MAX_ALLOWED_PRE_SALE);
         require(getCurrentStage() == 0);
-        // Transfer token to buyer
-        token.transfer(beneficiary, tokens);
         // Update the amount of token sold
         tokenSold = tokenSold.add(tokens);
+        // Transfer token to buyer
+        token.transfer(beneficiary, tokens);
         // Log the purchase event
         TokenPurchase(beneficiary, beneficiary, 0, tokens);
     }
@@ -180,14 +180,15 @@ contract CerttifyCrowdsale {
         require(!icoEnded);
         // Calculate the amount of token founders will be able to withdraw
         uint256 tokenWithdraw = tokenSold.div(3); // 1/3 of all token sold ==> 25% of all available token including these token
-        token.transfer(contractOwner, tokenWithdraw);
+        // End the ICO
+        icoEnded = true;
         // Burn the remaining token if any
         uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(tokenWithdraw);
         if (tokenLeft != 0) {
             token.burn(tokenLeft, "NOTE:ICO_BURN_LEFT");
         }
-        // End the ICO
-        icoEnded = true;
+        // Transfer token to founders
+        token.transfer(contractOwner, tokenWithdraw);
     }
 
     /**
