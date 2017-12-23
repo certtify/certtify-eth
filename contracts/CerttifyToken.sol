@@ -14,7 +14,7 @@ contract CerttifyToken is StandardToken {
     event Burn(address indexed burner, uint256 value, string wavesAddress);
 
     string public name = "Certtify Token";
-    string public symbol = "CTT";
+    string public symbol = "CTF";
     uint8 public decimals = 18;
 
     function CerttifyToken(uint256 maxSupply) public {
