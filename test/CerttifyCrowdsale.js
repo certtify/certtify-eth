@@ -535,7 +535,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         });
     });
 
-    it('Cannot buy token using moree ETH than the purchaser owns', function(done) {
+    it('Cannot buy token using more ETH than the purchaser owns', function(done) {
         var instance = null;
         var oriBalance = null;
         Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
