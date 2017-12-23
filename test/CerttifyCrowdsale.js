@@ -535,6 +535,37 @@ contract('CerttifyCrowdsale', function(accounts) {
         });
     });
 
+    it('Cannot buy token using moree ETH than the purchaser owns', function(done) {
+        var instance = null;
+        var oriBalance = null;
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+            from: accounts[0]
+        }).then(function(_instance) {
+            instance = _instance;
+            return getTokenBalance(instance, accounts[5]);
+        }).then(function(balanceOriginal) {
+            // Get original balance before the invalid purchase
+            oriBalance = balanceOriginal;
+            return new Promise(function(resolve, reject) {
+                // accounts[5] was created with no balance, this should therefore fail
+                purchaseConfirmSale(instance, accounts[5], _wallet, 1, _szaboCostOfTokenStage1).then(function() {
+                    reject('Purchaser purchase tokens with more Ether than what he owned');
+                    return;
+                }).catch(function() {
+                    // Expect an error
+                    resolve();
+                });
+            });
+        }).then(function() {
+            return getTokenBalance(instance, accounts[5]);
+        }).then(function(balance) {
+            assert(balance.cmp(oriBalance) == 0, 'Purchaser purchase tokens with more Ether than what he owned');
+            done();
+        }).catch(function(err) {
+            done(err)
+        });
+    });
+
     it('Correct amount of token are withdraw by founders and rest are burnt when maximum cap is not reached', function(done) {
         var instance = null;
         var tokenInstance = null;
