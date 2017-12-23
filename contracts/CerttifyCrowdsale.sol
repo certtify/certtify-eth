@@ -34,7 +34,7 @@ contract CerttifyCrowdsale {
     uint256 public rateStage3;
 
     // Cap of the crowdsale
-    uint256 constant MAX_SUPPLY = 500000000; // 5e8
+    uint256 public constant MAX_SUPPLY = 500000000; // 5e8
     uint256 public MAX_SUPPLY_DECIMAL = MAX_SUPPLY.mul(10 ** uint256(18)); // MAX_SUPPLY in decimal form
     uint256 public MAX_ALLOWED_PRE_SALE = MAX_SUPPLY_DECIMAL.div(20); // 5% of MAX_SUPPLY
     uint256 public MAX_ALLOWED_STAGE_1 = MAX_SUPPLY_DECIMAL.div(5); // 20% of MAX_SUPPLY
@@ -50,7 +50,7 @@ contract CerttifyCrowdsale {
     uint256 public tokenSold;
 
     // Boolean storing whether ICO is ended with postICO() already called
-    bool icoEnded;
+    bool public icoEnded;
 
     /**
     * Event for token purchase logging
