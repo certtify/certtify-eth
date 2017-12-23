@@ -35,7 +35,7 @@ contract CerttifyCrowdsale {
 
     // Cap of the crowdsale
     uint256 constant MAX_SUPPLY = 500000000; // 5e8
-    uint256 public MAX_SUPPLY_DECIMAL = MAX_SUPPLY * 10 ** uint256(18); // MAX_SUPPLY in decimal form
+    uint256 public MAX_SUPPLY_DECIMAL = MAX_SUPPLY.mul(10 ** uint256(18)); // MAX_SUPPLY in decimal form
     uint256 public MAX_ALLOWED_PRE_SALE = MAX_SUPPLY_DECIMAL.div(20); // 5% of MAX_SUPPLY
     uint256 public MAX_ALLOWED_STAGE_1 = MAX_SUPPLY_DECIMAL.div(5); // 20% of MAX_SUPPLY
     uint256 public MAX_ALLOWED_STAGE_2 = MAX_SUPPLY_DECIMAL.div(4); // 25% of MAX_SUPPLY
@@ -97,9 +97,9 @@ contract CerttifyCrowdsale {
         startTimeStage3 = _timestampStage3;
         endTime = _timestampEndTime;
         // Calculate the rate for each stage
-        rateStage1 = _szaboCostOfTokenStage1 * 1 szabo;
-        rateStage2 = _szaboCostOfTokenStage2 * 1 szabo;
-        rateStage3 = _szaboCostOfTokenStage3 * 1 szabo;
+        rateStage1 = _szaboCostOfTokenStage1.mul(1 szabo);
+        rateStage2 = _szaboCostOfTokenStage2.mul(1 szabo);
+        rateStage3 = _szaboCostOfTokenStage3.mul(1 szabo);
         // Set Ethereum collection address
         wallet = _wallet;
         // Set contract owner
@@ -216,7 +216,7 @@ contract CerttifyCrowdsale {
      * @return true if the purchase request can be entertained
      */
     function checkCapNotReached(uint256 tokenBuyReq) internal view returns (bool) {
-        return tokenSold + tokenBuyReq <= MAX_ALLOWED_TOTAL;
+        return tokenSold.add(tokenBuyReq) <= MAX_ALLOWED_TOTAL;
     }
 
     /**

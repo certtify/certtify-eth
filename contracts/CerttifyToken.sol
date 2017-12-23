@@ -18,7 +18,7 @@ contract CerttifyToken is StandardToken {
     uint8 public decimals = 18;
 
     function CerttifyToken(uint256 maxSupply) public {
-        totalSupply = maxSupply * 10 ** uint256(decimals);
+        totalSupply = maxSupply.mul(10 ** uint256(decimals));
         balances[msg.sender] = totalSupply;
     }
 
