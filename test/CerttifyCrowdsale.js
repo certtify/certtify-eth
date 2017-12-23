@@ -211,7 +211,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             instance.TokenPurchase().get(function(err, logs) {
                 var event = logs[0].args;
                 // Assert token purchase event is logged correctly
-                assert.equal(event.purchaser, '0x0000000000000000000000000000000000000000', 'Purchaser of pre-sale is not logged as address(0)');
+                assert.equal(event.purchaser, accounts[1], 'Purchaser of pre-sale is not logged as address(0)');
                 assert.equal(event.beneficiary, accounts[1], 'Beneficiary of pre-sale not logged correctly');
                 assert.equal(event.value.valueOf(), 0, 'ETH value of pre-sale not logged correctly');
                 assert.equal(event.amount.valueOf(), web3.toBigNumber('1e+22'), 'Amount of token bought is not logged correctly in pre-sale');

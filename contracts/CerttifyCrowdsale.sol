@@ -161,7 +161,7 @@ contract CerttifyCrowdsale {
         // Update the amount of token sold
         tokenSold = tokenSold.add(tokens);
         // Log the purchase event
-        TokenPurchase(address(0), beneficiary, 0, tokens);
+        TokenPurchase(beneficiary, beneficiary, 0, tokens);
     }
     
     /**
