@@ -62,6 +62,16 @@ contract CerttifyCrowdsale {
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     /**
+     * Fix for ERC20 short address attack
+     */
+    modifier onlyPayloadSize(uint256 size) {
+        if (msg.data.length < size + 4) {
+            revert();
+        }
+        _;
+    }
+
+    /**
      * Construct the crowdsale contact
      *
      * @param _timestampStage1 Timestamp in seconds since Unix epoch for stage 1 ICO to begin
@@ -148,7 +158,7 @@ contract CerttifyCrowdsale {
     /**
      * Function for handling pre-sale
      */
-    function buyTokensPreSale(address beneficiary, uint256 tokens) public {
+    function buyTokensPreSale(address beneficiary, uint256 tokens) public onlyPayloadSize(2 * 32) {
         // Check if called by contract owner
         require(msg.sender == contractOwner);
         // Checking if the pre-sale is valid
