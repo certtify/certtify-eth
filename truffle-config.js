@@ -4,6 +4,11 @@
  * */
 module.exports = {
     networks: {
+        official: {
+            host: "localhost",
+            port: 8545,
+            network_id: "*"
+        },
         private: {
             host: "localhost",
             port: 8545,
