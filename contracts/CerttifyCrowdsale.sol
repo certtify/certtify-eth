@@ -78,23 +78,23 @@ contract CerttifyCrowdsale {
      * @param _timestampStage2 Number of seconds after the launch of stage 1 ICO for stage 2 ICO to begin
      * @param _timestampStage3 Number of seconds after the launch of stage 2 ICO for stage 3 ICO to begin
      * @param _timestampEndTime Number of seconds after the launch of stage 3 ICO for ending the ICO
-     * @param _szaboCostOfTokenStage1 Cost of each Certtify token, measured in szabo, in stage 1 ICO
-     * @param _szaboCostOfTokenStage2 Cost of each Certtify token, measured in szabo, in stage 2 ICO
-     * @param _szaboCostOfTokenStage3 Cost of each Certtify token, measured in szabo, in stage 3 ICO
+     * @param _weiCostOfTokenStage1 Cost of each Certtify token, measured in wei, in stage 1 ICO
+     * @param _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
+     * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
      * @param _wallet Address for collecting the raised fund
      */
     function CerttifyCrowdsale(
         uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, 
-        uint256 _szaboCostOfTokenStage1, uint256 _szaboCostOfTokenStage2, uint256 _szaboCostOfTokenStage3, 
+        uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, 
         address _wallet 
     ) public {
         require(_timestampStage1 > 0);
         require(_timestampStage2 > 0);
         require(_timestampStage3 > 0);
         require(_timestampEndTime > 0);
-        require(_szaboCostOfTokenStage1 > 0);
-        require(_szaboCostOfTokenStage2 > 0);
-        require(_szaboCostOfTokenStage3 > 0);
+        require(_weiCostOfTokenStage1 > 0);
+        require(_weiCostOfTokenStage2 > 0);
+        require(_weiCostOfTokenStage3 > 0);
         require(_wallet != address(0));
 
         // Create the Certtify token for sale
@@ -107,9 +107,9 @@ contract CerttifyCrowdsale {
         startTimeStage3 = _timestampStage3;
         endTime = _timestampEndTime;
         // Calculate the rate for each stage
-        rateStage1 = _szaboCostOfTokenStage1.mul(1 szabo);
-        rateStage2 = _szaboCostOfTokenStage2.mul(1 szabo);
-        rateStage3 = _szaboCostOfTokenStage3.mul(1 szabo);
+        rateStage1 = _weiCostOfTokenStage1.mul(1 wei);
+        rateStage2 = _weiCostOfTokenStage2.mul(1 wei);
+        rateStage3 = _weiCostOfTokenStage3.mul(1 wei);
         // Set Ethereum collection address
         wallet = _wallet;
         // Set contract owner

@@ -52,7 +52,7 @@ var purchaseConfirmSale = function(instance, address, wallet, etherSent, rate) {
                 }
                 // Get balance of address that should receive the tokens
                 getTokenBalance(instance, address).then(function(balance) {
-                    var tokenExpected = web3.toBigNumber(web3._extend.utils.toWei(etherSent, 'ether')).div(web3.toBigNumber(web3._extend.utils.toWei(rate, 'szabo')));
+                    var tokenExpected = web3.toBigNumber(web3._extend.utils.toWei(etherSent, 'ether')).div(web3.toBigNumber(web3._extend.utils.toWei(rate, 'wei')));
                     var balanceExpected = tokenExpected.mul(web3.toBigNumber('1e+18')).add(addressTokenBalanceOriginal); // Convert into decimal and add back the original balance of that address
                     if (balance.cmp(balanceExpected) != 0) {
                         reject('Balance rewarded to investor does not match the expected balance');
@@ -94,8 +94,8 @@ var purchaseConfirmSale = function(instance, address, wallet, etherSent, rate) {
 /**
  * Function for calculating the amount of ether required to purchase certain amount of token based on the given rate
  */
-var calEther = function(tokenRequired, rateInSzabo) {
-    return web3._extend.utils.fromWei(web3.toBigNumber(tokenRequired).mul(web3.toBigNumber(web3._extend.utils.toWei(rateInSzabo, 'szabo'))).mul(web3.toBigNumber('1e-18')), 'ether');
+var calEther = function(tokenRequired, rateInWei) {
+    return web3._extend.utils.fromWei(web3.toBigNumber(tokenRequired).mul(web3.toBigNumber(web3._extend.utils.toWei(rateInWei, 'wei'))).mul(web3.toBigNumber('1e-18')), 'ether');
 }
 
 contract('CerttifyCrowdsale', function(accounts) {
@@ -104,14 +104,14 @@ contract('CerttifyCrowdsale', function(accounts) {
     const _timestampStage2 = getTimestamp(20);
     const _timestampStage3 = getTimestamp(30);
     const _timestampEndTime = getTimestamp(40); 
-    const _szaboCostOfTokenStage1 = 10;
-    const _szaboCostOfTokenStage2 = 12;
-    const _szaboCostOfTokenStage3 = 15;
+    const _weiCostOfTokenStage1 = web3.toBigNumber('10000000000000');
+    const _weiCostOfTokenStage2 = web3.toBigNumber('12000000000000');
+    const _weiCostOfTokenStage3 = web3.toBigNumber('15000000000000');
     const _wallet = '0x6c2aafbb393d67e7057c34e7c8389e864928361b'; // Just a random address for testing
 
     it('Crowdsale contract deployed successfully with all variables set as expected', function(done) {
         var contractVars = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(instance) {
             // Get all public contract variables
@@ -158,13 +158,13 @@ contract('CerttifyCrowdsale', function(accounts) {
             assert.equal(ethWallet, _wallet, "ETH collection wallet is not set correctly");
             var owner = contractVars[7];
             assert.equal(owner, accounts[0], "Contract owner is not set correctly");
-            // Verify szabo rate is converted into wei rate correctly
+            // Verify wei rate is converted into wei rate correctly
             var rateStage1 = contractVars[8].valueOf();
-            assert.equal(rateStage1, web3._extend.utils.toWei(_szaboCostOfTokenStage1, 'szabo'), "Rate of stage 1 ICO is not set correctly");
+            assert.equal(rateStage1, web3._extend.utils.toWei(_weiCostOfTokenStage1, 'wei'), "Rate of stage 1 ICO is not set correctly");
             var rateStage2 = contractVars[9].valueOf();
-            assert.equal(rateStage2, web3._extend.utils.toWei(_szaboCostOfTokenStage2, 'szabo'), "Rate of stage 2 ICO is not set correctly");
+            assert.equal(rateStage2, web3._extend.utils.toWei(_weiCostOfTokenStage2, 'wei'), "Rate of stage 2 ICO is not set correctly");
             var rateStage3 = contractVars[10].valueOf();
-            assert.equal(rateStage3, web3._extend.utils.toWei(_szaboCostOfTokenStage3, 'szabo'), "Rate of stage 3 ICO is not set correctly");
+            assert.equal(rateStage3, web3._extend.utils.toWei(_weiCostOfTokenStage3, 'wei'), "Rate of stage 3 ICO is not set correctly");
             // Verify cap of each stage is set correctly
             var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
             var capPreSale = contractVars[11].valueOf();
@@ -186,7 +186,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handling a valid pre-sale call', function(done) {
         var instance = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -224,7 +224,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         var instance = null;
         var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
         var maxPreSale = maxSupply.mul(0.05); // 5% of max supply
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -262,7 +262,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Only contract owner can execute pre-sale function', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale(accounts[1], 1, {
@@ -275,7 +275,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot pre-sale to address(0)', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale('0x0000000000000000000000000000000000000000', 1, {
@@ -288,7 +288,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot pre-sale negative amount of tokens', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale(accounts[1], web3.toBigNumber('-1e+18'), {
@@ -302,7 +302,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Cannot pre-sale after stage-1 is launched', function(done) {
         // Deploy contract but immediately begin stage 1
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale(accounts[1], 1, {
@@ -316,11 +316,11 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handle a valid public buy token request in stage 1 ICO', function(done) {
         // Deploy contract but immediately begin stage 1
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(instance) {
             // Purchase from accounts[1] for 1 ether in stage 1 with calling default function
-            purchaseConfirmSale(instance, accounts[1], _wallet, 1, _szaboCostOfTokenStage1).then(function() {
+            purchaseConfirmSale(instance, accounts[1], _wallet, 1, _weiCostOfTokenStage1).then(function() {
                 done();
             }).catch(function(err) {
                 done(err); // Throw error
@@ -330,11 +330,11 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handle a valid public buy token request in stage 2 ICO when the change is caused by timestamp', function(done) {
         // Deploy contract but immediately begin stage 2
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(instance) {
             // Purchase from accounts[1] for 1.2 ether in stage 2 with calling default function
-            purchaseConfirmSale(instance, accounts[1], _wallet, 1.2, _szaboCostOfTokenStage2).then(function() {
+            purchaseConfirmSale(instance, accounts[1], _wallet, 1.2, _weiCostOfTokenStage2).then(function() {
                 done();
             }).catch(function(err) {
                 done(err); // Throw error
@@ -344,11 +344,11 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handle a valid public buy token request in stage 3 ICO when the change is caused by timestamp', function(done) {
         // Deploy contract but immediately begin stage 3
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(instance) {
             // Purchase from accounts[1] for 1.2 ether in stage 2 with calling default function
-            purchaseConfirmSale(instance, accounts[1], _wallet, 1.5, _szaboCostOfTokenStage3).then(function() {
+            purchaseConfirmSale(instance, accounts[1], _wallet, 1.5, _weiCostOfTokenStage3).then(function() {
                 done();
             }).catch(function(err) {
                 done(err); // Throw error
@@ -358,7 +358,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('ICO sale is stopped after the current time has passed the end timestamp', function(done) {
         // Deploy contract but immediately end the ICO
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             var contractAddress = _instance.address;
@@ -379,7 +379,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         var instance = null;
         var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
         // Deploy contract but immediately begin stage 1
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -392,8 +392,8 @@ contract('CerttifyCrowdsale', function(accounts) {
              * Max cap of stage 1 ICO is 25% of MAX_SUPPLY
              * Here, we make 2 purchase, each with 12.5% of MAX_SUPPLY, and should reach the cap of stage 1
              */
-            purchaseConfirmSale(instance, accounts[1], _wallet, calEther(maxSupply.mul(STAGE_1_PURCHASE), _szaboCostOfTokenStage1), _szaboCostOfTokenStage1).then(function() {
-                return purchaseConfirmSale(instance, accounts[2], _wallet, calEther(maxSupply.mul(STAGE_1_PURCHASE), _szaboCostOfTokenStage1), _szaboCostOfTokenStage1);
+            purchaseConfirmSale(instance, accounts[1], _wallet, calEther(maxSupply.mul(STAGE_1_PURCHASE), _weiCostOfTokenStage1), _weiCostOfTokenStage1).then(function() {
+                return purchaseConfirmSale(instance, accounts[2], _wallet, calEther(maxSupply.mul(STAGE_1_PURCHASE), _weiCostOfTokenStage1), _weiCostOfTokenStage1);
             })
             /**
              * Stage 2 ICO Purchase Test
@@ -409,11 +409,11 @@ contract('CerttifyCrowdsale', function(accounts) {
              *      2. Rate is working as expected (use the rate of last stage in case of over-bought)
              */
             .then(function() {
-                return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(maxSupply.mul(STAGE_2_PURCHASE), _szaboCostOfTokenStage2), _szaboCostOfTokenStage2);
+                return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(maxSupply.mul(STAGE_2_PURCHASE), _weiCostOfTokenStage2), _weiCostOfTokenStage2);
             }).then(function() {
-                return purchaseConfirmSale(instance, accounts[2], _wallet, calEther(maxSupply.mul(STAGE_2_PURCHASE), _szaboCostOfTokenStage2), _szaboCostOfTokenStage2);
+                return purchaseConfirmSale(instance, accounts[2], _wallet, calEther(maxSupply.mul(STAGE_2_PURCHASE), _weiCostOfTokenStage2), _weiCostOfTokenStage2);
             }).then(function() {
-                return purchaseConfirmSale(instance, accounts[3], _wallet, calEther(maxSupply.mul(STAGE_2_PURCHASE), _szaboCostOfTokenStage2), _szaboCostOfTokenStage2);
+                return purchaseConfirmSale(instance, accounts[3], _wallet, calEther(maxSupply.mul(STAGE_2_PURCHASE), _weiCostOfTokenStage2), _weiCostOfTokenStage2);
             })
             /**
              * Stage 3 ICO Purchase Test
@@ -433,15 +433,15 @@ contract('CerttifyCrowdsale', function(accounts) {
              *      2. ICO sale will not exceed the setting set by MAX_ALLOWED_TOTAL
              */
             .then(function() {
-                return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _szaboCostOfTokenStage3), _szaboCostOfTokenStage3);
+                return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             }).then(function() {
-                return purchaseConfirmSale(instance, accounts[2], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _szaboCostOfTokenStage3), _szaboCostOfTokenStage3);
+                return purchaseConfirmSale(instance, accounts[2], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             }).then(function() {
-                return purchaseConfirmSale(instance, accounts[3], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _szaboCostOfTokenStage3), _szaboCostOfTokenStage3);
+                return purchaseConfirmSale(instance, accounts[3], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             }).then(function() {
                 // Attempt over-buying over the cap with ether enough to buy 4.25% MAX_SUPPLY + 1 wei
                 return new Promise(function(resolve, reject) {
-                    purchaseConfirmSale(instance, accounts[4], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _szaboCostOfTokenStage3).add(1), _szaboCostOfTokenStage3).then(function() {
+                    purchaseConfirmSale(instance, accounts[4], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3).add(1), _weiCostOfTokenStage3).then(function() {
                         reject('ICO sale allow token sale over MAX_ALLOWED_TOTAL');
                         return;
                     }).catch(function(err) {
@@ -450,7 +450,7 @@ contract('CerttifyCrowdsale', function(accounts) {
                     });
                 });
             }).then(function() {
-                return purchaseConfirmSale(instance, accounts[4], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _szaboCostOfTokenStage3), _szaboCostOfTokenStage3);
+                return purchaseConfirmSale(instance, accounts[4], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             })
             /**
              * ICO Close Test
@@ -461,7 +461,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             .then(function() {
                 // Encapsulate this call since we are expecting an error to be throw instead of being resolved
                 return new Promise(function(resolve, reject) {
-                    purchaseConfirmSale(instance, accounts[1], _wallet, calEther(1, _szaboCostOfTokenStage3), _szaboCostOfTokenStage3).then(function() {
+                    purchaseConfirmSale(instance, accounts[1], _wallet, calEther(1, _weiCostOfTokenStage3), _weiCostOfTokenStage3).then(function() {
                         reject('ICO did not end after MAX_SUPPLY is sold');
                         return;
                     }).catch(function(err) {
@@ -499,7 +499,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot request ICO to address(0)', function(done) {
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(instance) {
             return instance.buyTokens('0x0000000000000000000000000000000000000000', {
@@ -516,7 +516,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot buy token with 0 wei sent', function(done) {
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(instance) {
             web3.eth.sendTransaction({
@@ -538,7 +538,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('Cannot buy token using more ETH than the purchaser owns', function(done) {
         var instance = null;
         var oriBalance = null;
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -548,7 +548,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             oriBalance = balanceOriginal;
             return new Promise(function(resolve, reject) {
                 // accounts[5] was created with no balance, this should therefore fail
-                purchaseConfirmSale(instance, accounts[5], _wallet, 1, _szaboCostOfTokenStage1).then(function() {
+                purchaseConfirmSale(instance, accounts[5], _wallet, 1, _weiCostOfTokenStage1).then(function() {
                     reject('Purchaser purchase tokens with more Ether than what he owned');
                     return;
                 }).catch(function() {
@@ -578,11 +578,11 @@ contract('CerttifyCrowdsale', function(accounts) {
         var maxSupplyLeft = tokenBought.add(withdrawable);
         // Deploy the contract, immediately start stage 3 ICO
         // Gives ourself 12 seconds to buy the token before testing the function
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.2), _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.2), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
-            return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(tokenBought, _szaboCostOfTokenStage3), _szaboCostOfTokenStage3);
+            return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(tokenBought, _weiCostOfTokenStage3), _weiCostOfTokenStage3);
         }).then(function() {
             // Wait for 10 seconds for ICO to end
             return new Promise(function(resolve, reject) {
@@ -645,7 +645,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('postICO can only be called by contract owner', function(done) {
         var instance = null;
         // Deploy contract in end-ico stage
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -668,7 +668,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('postICO cannot be called before ICO is over', function(done) {
         var instance = null;
         // Deploy contract in end-ico stage
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _szaboCostOfTokenStage1, _szaboCostOfTokenStage2, _szaboCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
