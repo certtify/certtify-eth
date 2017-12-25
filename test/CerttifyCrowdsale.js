@@ -108,10 +108,11 @@ contract('CerttifyCrowdsale', function(accounts) {
     const _weiCostOfTokenStage2 = web3.toBigNumber('12000000000000');
     const _weiCostOfTokenStage3 = web3.toBigNumber('15000000000000');
     const _wallet = '0x6c2aafbb393d67e7057c34e7c8389e864928361b'; // Just a random address for testing
+    const _founderTokenUnlock = getTimestamp(50);
 
     it('Crowdsale contract deployed successfully with all variables set as expected', function(done) {
         var contractVars = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             // Get all public contract variables
@@ -133,6 +134,9 @@ contract('CerttifyCrowdsale', function(accounts) {
             promises.push(instance.MAX_ALLOWED_TOTAL.call());
             promises.push(instance.weiRaised.call());
             promises.push(instance.tokenSold.call());
+            promises.push(instance.founderTokenUnlock.call());
+            promises.push(instance.founderWithdrawable.call());
+            promises.push(instance.founderTokenWithdrawn.call());
             return Promise.all(promises);
         }).then(function(_contractVars) {
             // Verify all contract variable one-by-one
@@ -180,12 +184,18 @@ contract('CerttifyCrowdsale', function(accounts) {
             assert.equal(weiRaised, 0, "Initial weiRaised is not 0");
             var tokenSold = contractVars[16].valueOf();
             assert.equal(tokenSold, 0, "Initial tokenSold is not 0");
+            var founderTokenUnlock = contractVars[17].valueOf();
+            assert.equal(founderTokenUnlock.valueOf(), _founderTokenUnlock, "Unlock time of founders' token is not set correctly");
+            var founderWithdrawable = contractVars[18].valueOf();
+            assert.equal(founderWithdrawable.valueOf(), 0, "Amount of token withdrawable by founders is not 0 by default");
+            var founderTokenWithdrawn = contractVars[19].valueOf();
+            assert(!founderTokenWithdrawn, "Founders' token withdrawn status is not false by default");
             done();
         });
     });
 
     it('Token contract is deployed with lockup set to true', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             return instance.token.call();
@@ -200,7 +210,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handling a valid pre-sale call', function(done) {
         var instance = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -238,7 +248,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         var instance = null;
         var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
         var maxPreSale = maxSupply.mul(0.05); // 5% of max supply
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -276,7 +286,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Only contract owner can execute pre-sale function', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale(accounts[1], 1, {
@@ -289,7 +299,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot pre-sale to address(0)', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale('0x0000000000000000000000000000000000000000', 1, {
@@ -302,7 +312,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot pre-sale negative amount of tokens', function(done) {
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale(accounts[1], web3.toBigNumber('-1e+18'), {
@@ -316,7 +326,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Cannot pre-sale after stage-1 is launched', function(done) {
         // Deploy contract but immediately begin stage 1
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             return _instance.buyTokensPreSale(accounts[1], 1, {
@@ -330,7 +340,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handle a valid public buy token request in stage 1 ICO', function(done) {
         // Deploy contract but immediately begin stage 1
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             // Purchase from accounts[1] for 1 ether in stage 1 with calling default function
@@ -344,7 +354,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handle a valid public buy token request in stage 2 ICO when the change is caused by timestamp', function(done) {
         // Deploy contract but immediately begin stage 2
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             // Purchase from accounts[1] for 1.2 ether in stage 2 with calling default function
@@ -358,7 +368,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('Handle a valid public buy token request in stage 3 ICO when the change is caused by timestamp', function(done) {
         // Deploy contract but immediately begin stage 3
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             // Purchase from accounts[1] for 1.2 ether in stage 2 with calling default function
@@ -372,7 +382,7 @@ contract('CerttifyCrowdsale', function(accounts) {
 
     it('ICO sale is stopped after the current time has passed the end timestamp', function(done) {
         // Deploy contract but immediately end the ICO
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             var contractAddress = _instance.address;
@@ -389,11 +399,11 @@ contract('CerttifyCrowdsale', function(accounts) {
         });
     });
 
-    it('ICO stage is automatically changed when cap of current stage is exceeded, cannot sale over MAX_ALLOWED_TOTAL cap, and allow founders to extract expected amount of tokens afterward', function(done) {
+    it('ICO stage is automatically changed when cap of current stage is exceeded, cannot sale over MAX_ALLOWED_TOTAL cap, and set the correct amount of tokens that founders could withdraw', function(done) {
         var instance = null;
         var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
         // Deploy contract but immediately begin stage 1
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -488,22 +498,20 @@ contract('CerttifyCrowdsale', function(accounts) {
                 assert(ended, 'hasEnded() did not return true when maximum cap is reached');
             })
             /**
-             * ICO Founders Extract Test
+             * ICO Founders Withdrawable Token Test
              * 
              * Since all token are sold out, founders should be able to withdraw 25% of MAX_SUPPLY
-             * Here, we only test that we could withdraw token from the function
-             * Detailed test are conducted below
+             * Here, we only test if founderWithdrawable is set correctly
              */
             .then(function() {
                 return instance.postICO({
                     from: accounts[0]
                 });
             }).then(function() {
-                // Get token balance of contract owner
-                return getTokenBalance(instance, accounts[0]);
-            }).then(function(balance) {
-                // Assert balance
-                assert(balance.cmp(maxSupply.mul(0.25)) == 0, 'Amount of token withdraw by founders is not identical to 25% of all available token');
+                return instance.founderWithdrawable.call();
+            }).then(function(founderWithdrawable) {
+                // Assert founderWithdrawable
+                assert(founderWithdrawable.cmp(maxSupply.mul(0.25)) == 0, 'Amount of token withdraw by founders is not identical to 25% of all available token');
                 done();
             }).catch(function(err) {
                 // Some error occured
@@ -513,7 +521,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot request ICO to address(0)', function(done) {
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             return instance.buyTokens('0x0000000000000000000000000000000000000000', {
@@ -530,7 +538,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     });
 
     it('Cannot buy token with 0 wei sent', function(done) {
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(instance) {
             web3.eth.sendTransaction({
@@ -552,7 +560,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('Cannot buy token using more ETH than the purchaser owns', function(done) {
         var instance = null;
         var oriBalance = null;
-        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -580,9 +588,10 @@ contract('CerttifyCrowdsale', function(accounts) {
         });
     });
 
-    it('Correct amount of token are withdraw by founders and rest are burnt when maximum cap is not reached', function(done) {
+    it('Correct amount of token are set to be withdrawable by founders and rest are burnt when maximum cap is not reached', function(done) {
         var instance = null;
         var tokenInstance = null;
+        var founderWithdrawable = null;
         var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
         // Buy 9% of token in the whole ICO
         var tokenBought = maxSupply.mul(web3.toBigNumber(0.09));
@@ -592,7 +601,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         var maxSupplyLeft = tokenBought.add(withdrawable);
         // Deploy the contract, immediately start stage 3 ICO
         // Gives ourself 12 seconds to buy the token before testing the function
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.2), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.2), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -627,11 +636,11 @@ contract('CerttifyCrowdsale', function(accounts) {
                 from: accounts[0]
             });
         }).then(function() {
-            // Get the balance of accounts[0]
-            return getTokenBalance(instance, accounts[0]);
-        }).then(function(balance) {
-            // Assert owner get 3% of total supply
-            assert(balance.cmp(withdrawable) == 0, 'Token withdrawable to founders does not equate to 25% of total available supply when maximum cap is not reached');
+            return instance.founderWithdrawable.call();
+        }).then(function(_founderWithdrawable) {
+            founderWithdrawable = _founderWithdrawable;
+            // Assert 3% of total supply is withdrawable
+            assert(founderWithdrawable.cmp(withdrawable) == 0, 'Token withdrawable to founders does not equate to 25% of total available supply when maximum cap is not reached');
             // Get token address
             return instance.token.call();
         }).then(function(tokenAddress) {
@@ -643,8 +652,8 @@ contract('CerttifyCrowdsale', function(accounts) {
             // Get the balance of the contract
             return getTokenBalance(instance, instance.address);
         }).then(function(balanceOfContract) {
-            // Balance of the contract address should be 0 since all remaining token are burnt
-            assert(balanceOfContract.cmp(0) == 0, 'Contract still holds token after the postICO call');
+            // Balance of the contract address should be founderWithdrawable, since it still holds token that is later distributed to owners
+            assert(balanceOfContract.cmp(founderWithdrawable) == 0, 'Contract still holds token after the postICO call');
             // Test if postICO can be called after a successful call
             return instance.postICO({
                 from: accounts[0]
@@ -659,7 +668,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('postICO can only be called by contract owner', function(done) {
         var instance = null;
         // Deploy contract in end-ico stage
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -682,7 +691,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('postICO cannot be called before ICO is over', function(done) {
         var instance = null;
         // Deploy contract in end-ico stage
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -705,7 +714,7 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('postICO unlock the token lockup', function(done) {
         var instance = null;
         // Deploy contract in end-ico stage
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
@@ -717,6 +726,108 @@ contract('CerttifyCrowdsale', function(accounts) {
             return tokenInstance.lockup.call();
         }).then(function(lockup) {
             assert(!lockup, 'Token contract is not locked up upon creation');
+            done();
+        });
+    });
+
+    it('founderWithdraw allow founders to withdraw correct amount of token after lockup, and cannot be called more than once', function(done) {
+        var instance = null;
+        var tokenInstance = null;
+        var founderWithdrawable = null;
+        var maxSupply = web3.toBigNumber('5e26'); // 5e8 * 1e18
+        // Buy 9% of token in the whole ICO
+        var tokenBought = maxSupply.mul(web3.toBigNumber(0.09));
+        // Founder should be able to withdraw 9%/3 = 3% of token, since they will own 25% of the 12% supply available
+        var withdrawable = tokenBought.div(3);
+        // Deploy the contract, immediately start stage 3 ICO
+        // Gives ourself 6 seconds to buy the token before testing the function, and allow founder to withdraw after 12 seconds
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.1), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, getTimestamp(0.2), {
+            from: accounts[0]
+        }).then(function(_instance) {
+            instance = _instance;
+            return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(tokenBought, _weiCostOfTokenStage3), _weiCostOfTokenStage3);
+        }).then(function() {
+            // Wait for 10 seconds for ICO to end
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    resolve();
+                }, 10 * 1000);
+            });
+        }).then(function() {
+            // Call postICO
+            return instance.postICO({
+                from: accounts[0]
+            });
+        }).then(function() {
+            // Call founderWithdraw() to withdraw token
+            return instance.founderWithdraw();
+        }).then(function() {
+            // Get token address
+            return instance.token.call();
+        }).then(function(tokenAddress) {
+            tokenInstance = CerttifyToken.at(tokenAddress);
+            // Get balanceOf(accounts[0])
+            return tokenInstance.balanceOf(accounts[0]);
+        }).then(function(balance0) {
+            // Assert 3% of token are withdrawn by founders
+            assert(balance0.cmp(withdrawable) == 0, 'Number of token rewarded to founders mismatched');
+            // Get balanceOf(contract)
+            return tokenInstance.balanceOf(instance.address);
+        }).then(function(balanceC) {
+            assert(balanceC.cmp(0) == 0, 'Contract still holds token after founders withdrawn their token');
+            // Call founderWithdraw one more time
+            return instance.founderWithdraw();
+        }).then(function() {
+            done('No error is thrown when founderWithdraw() is called twice');
+        }).catch(function(err) {
+            // Error is expected
+            done();
+        });
+    });
+
+    it('founderWithdraw can only be called by contract owner', function(done) {
+        var instance = null;
+        // Deploy contract with founders' token unlocked already
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, getTimestamp(0), {
+            from: accounts[0]
+        }).then(function(_instance) {
+            instance = _instance;
+            return instance.postICO();
+        }).then(function() {
+            return instance.founderWithdraw({ from: accounts[1] });
+        }).then(function() {
+            done('No error is thrown when founderWithdraw() is not called by owner');
+        }).catch(function(err) {
+            done();
+        });
+    });
+
+    it('founderWithdraw cannot be called before founder token are unlocked', function(done) {
+        var instance = null;
+        // Deploy contract with founders' token not yet unlocked
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlock, {
+            from: accounts[0]
+        }).then(function(_instance) {
+            instance = _instance;
+            return instance.postICO();
+        }).then(function() {
+            return instance.founderWithdraw();
+        }).then(function() {
+            done('No error is thrown when founderWithdraw() is called before unlock time');
+        }).catch(function(err) {
+            done();
+        });
+    });
+
+    it('founderWithdraw cannot be called before postICO is called', function(done) {
+        // Deploy contract with founders' token unlocked already
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, getTimestamp(0), {
+            from: accounts[0]
+        }).then(function(instance) {
+            return instance.founderWithdraw();
+        }).then(function() {
+            done('No error is thrown when founderWithdraw() is called before postICO is called');
+        }).catch(function(err) {
             done();
         });
     })
