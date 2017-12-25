@@ -65,9 +65,7 @@ contract CerttifyCrowdsale {
      * Fix for ERC20 short address attack
      */
     modifier onlyPayloadSize(uint256 size) {
-        if (msg.data.length < size + 4) {
-            revert();
-        }
+        require(msg.data.length >= size + 4);
         _;
     }
 
@@ -180,6 +178,7 @@ contract CerttifyCrowdsale {
      * This function will,
      *      1. Allow contract owner to withdraw, on behalf of all co-founder, to extract tokens that equates to 25% of all available token after withdrawl
      *      2. Burn all remaining tokens
+     *      3. Remove the lock up on transfer() and transferFrom() on token contract
      */
     function postICO() public {
         // Check if called by contract owner
@@ -197,6 +196,8 @@ contract CerttifyCrowdsale {
         if (tokenLeft != 0) {
             token.burn(tokenLeft, "NOTE:ICO_BURN_LEFT");
         }
+        // Remove lock up
+        token.unlock();
         // Transfer token to founders
         token.transfer(contractOwner, tokenWithdraw);
     }
