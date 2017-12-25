@@ -184,6 +184,20 @@ contract('CerttifyCrowdsale', function(accounts) {
         });
     });
 
+    it('Token contract is deployed with lockup set to true', function(done) {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+            from: accounts[0]
+        }).then(function(instance) {
+            return instance.token.call();
+        }).then(function(tokenAddress) {
+            tokenInstance = CerttifyToken.at(tokenAddress);
+            return tokenInstance.lockup.call();
+        }).then(function(lockup) {
+            assert(lockup, 'Token contract is not locked up upon creation');
+            done();
+        });
+    })
+
     it('Handling a valid pre-sale call', function(done) {
         var instance = null;
         Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
@@ -687,5 +701,24 @@ contract('CerttifyCrowdsale', function(accounts) {
             done();
         });
     });
+
+    it('postICO unlock the token lockup', function(done) {
+        var instance = null;
+        // Deploy contract in end-ico stage
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, {
+            from: accounts[0]
+        }).then(function(_instance) {
+            instance = _instance;
+            return instance.postICO();
+        }).then(function() {
+            return instance.token.call();
+        }).then(function(tokenAddress) {
+            tokenInstance = CerttifyToken.at(tokenAddress);
+            return tokenInstance.lockup.call();
+        }).then(function(lockup) {
+            assert(!lockup, 'Token contract is not locked up upon creation');
+            done();
+        });
+    })
 
 });
