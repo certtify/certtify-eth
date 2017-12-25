@@ -29,6 +29,8 @@ contract('StandardToken', function(accounts) {
             from: accounts[0]
         }).then(function(instance) {
 			token = instance;
+			return token.unlock(); // Remove lockup
+		}).then(function() {
 			done();
 		}).catch(function(err) {
 			console.log(err);
