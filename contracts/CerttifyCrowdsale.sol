@@ -51,6 +51,13 @@ contract CerttifyCrowdsale {
 
     // Boolean storing whether ICO is ended with postICO() already called
     bool public icoEnded;
+    
+    // Timestamp when founders can begin withdrawing their token
+    uint256 public founderTokenUnlock;
+    // Amount of token founders could withdraw
+    uint256 public founderWithdrawable;
+    // Boolean storing whether founders has withdrawn the token
+    bool public founderTokenWithdrawn;
 
     /**
     * Event for token purchase logging
@@ -73,18 +80,19 @@ contract CerttifyCrowdsale {
      * Construct the crowdsale contact
      *
      * @param _timestampStage1 Timestamp in seconds since Unix epoch for stage 1 ICO to begin
-     * @param _timestampStage2 Number of seconds after the launch of stage 1 ICO for stage 2 ICO to begin
-     * @param _timestampStage3 Number of seconds after the launch of stage 2 ICO for stage 3 ICO to begin
-     * @param _timestampEndTime Number of seconds after the launch of stage 3 ICO for ending the ICO
+     * @param _timestampStage2 Timestamp in seconds since Unix epoch for stage 2 ICO to begin
+     * @param _timestampStage3 Timestamp in seconds since Unix epoch for stage 3 ICO to begin
+     * @param _timestampEndTime Timestamp in seconds since Unix epoch for ending the ICO
      * @param _weiCostOfTokenStage1 Cost of each Certtify token, measured in wei, in stage 1 ICO
      * @param _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
      * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
      * @param _wallet Address for collecting the raised fund
+     * @param _founderTokenUnlock Timestamp in seconds since Unix epoch for unlocking founders' token
      */
     function CerttifyCrowdsale(
         uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, 
         uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, 
-        address _wallet 
+        address _wallet, uint256 _founderTokenUnlock
     ) public {
         require(_timestampStage1 > 0);
         require(_timestampStage2 > 0);
@@ -94,6 +102,7 @@ contract CerttifyCrowdsale {
         require(_weiCostOfTokenStage2 > 0);
         require(_weiCostOfTokenStage3 > 0);
         require(_wallet != address(0));
+        require(_founderTokenUnlock > 0);
 
         // Create the Certtify token for sale
         token = createTokenContract();
@@ -114,6 +123,10 @@ contract CerttifyCrowdsale {
         contractOwner = msg.sender;
         // Set ICO not ended
         icoEnded = false;
+        // Set founder not withdrawn their token yet
+        founderTokenWithdrawn = false;
+        // Set the time when founders' token are unlocked
+        founderTokenUnlock = _founderTokenUnlock;
     }
 
     /** 
@@ -176,7 +189,7 @@ contract CerttifyCrowdsale {
      * Function for contract owner to execute after the crowdsale
      * 
      * This function will,
-     *      1. Allow contract owner to withdraw, on behalf of all co-founder, to extract tokens that equates to 25% of all available token after withdrawl
+     *      1. Set the amount of token withdrawable by founders which equates to 25% of all available token after withdrawl
      *      2. Burn all remaining tokens
      *      3. Remove the lock up on transfer() and transferFrom() on token contract
      */
@@ -188,18 +201,34 @@ contract CerttifyCrowdsale {
         // Check if this function is already called
         require(!icoEnded);
         // Calculate the amount of token founders will be able to withdraw
-        uint256 tokenWithdraw = tokenSold.div(3); // 1/3 of all token sold ==> 25% of all available token including these token
+        founderWithdrawable = tokenSold.div(3); // 1/3 of all token sold ==> 25% of all available token including these token
         // End the ICO
         icoEnded = true;
         // Burn the remaining token if any
-        uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(tokenWithdraw);
+        uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(founderWithdrawable);
         if (tokenLeft != 0) {
             token.burn(tokenLeft, "NOTE:ICO_BURN_LEFT");
         }
         // Remove lock up
         token.unlock();
-        // Transfer token to founders
-        token.transfer(contractOwner, tokenWithdraw);
+    }
+
+    /**
+     * Allow founders to withdraw their token after lockup period
+     */
+    function founderWithdraw() public {
+        // Check if called by contract owner
+        require(msg.sender == contractOwner);
+        // Check if founders' token is unlocked
+        require(now >= founderTokenUnlock);
+        // Check if postICO is already called, as it set the founderWithdrawable variable
+        require(icoEnded);
+        // Check if founders has already withdrawn their token
+        require(!founderTokenWithdrawn);
+        // Set founderTokenWithdrawn to true
+        founderTokenWithdrawn = true;
+        // Send the withdrawable amount of token to contractOwner's address
+        token.transfer(contractOwner, founderWithdrawable);
     }
 
     /**
