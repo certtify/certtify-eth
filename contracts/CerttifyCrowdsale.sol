@@ -52,20 +52,39 @@ contract CerttifyCrowdsale {
     // Boolean storing whether ICO is ended with postICO() already called
     bool public icoEnded;
     
-    // Timestamp when founders can begin withdrawing their token
-    uint256 public founderTokenUnlock;
-    // Amount of token founders could withdraw
-    uint256 public founderWithdrawable;
-    // Boolean storing whether founders has withdrawn the token
-    bool public founderTokenWithdrawn;
+    // Timestamp when founders can begin withdrawing their token in phase 1
+    uint256 public founderTokenUnlockPhase1;
+    // Timestamp when founders can begin withdrawing their token in phase 2
+    uint256 public founderTokenUnlockPhase2;
+    // Timestamp when founders can begin withdrawing their token in phase 3
+    uint256 public founderTokenUnlockPhase3;
+    // Timestamp when founders can begin withdrawing their token in phase 4
+    uint256 public founderTokenUnlockPhase4;
+
+    // Boolean storing whether founders has withdrawn the token in phase 1 unlock
+    bool public founderTokenWithdrawnPhase1;
+    // Amount of token founders could withdraw in phase 1
+    uint256 public founderWithdrawablePhase1;
+    // Boolean storing whether founders has withdrawn the token in phase 2 unlock
+    bool public founderTokenWithdrawnPhase2;
+    // Amount of token founders could withdraw in phase 1
+    uint256 public founderWithdrawablePhase2;
+    // Boolean storing whether founders has withdrawn the token in phase 3 unlock
+    bool public founderTokenWithdrawnPhase3;
+    // Amount of token founders could withdraw in phase 3
+    uint256 public founderWithdrawablePhase3;
+    // Boolean storing whether founders has withdrawn the token in phase 4 unlock
+    bool public founderTokenWithdrawnPhase4;
+    // Amount of token founders could withdraw in phase 4
+    uint256 public founderWithdrawablePhase4;
 
     /**
-    * Event for token purchase logging
-    * @param purchaser who paid for the tokens
-    * @param beneficiary who got the tokens
-    * @param value weis paid for purchase
-    * @param amount amount of tokens purchased
-    */
+     * Event for token purchase logging
+     * @param purchaser who paid for the tokens
+     * @param beneficiary who got the tokens
+     * @param value weis paid for purchase
+     * @param amount amount of tokens purchased
+     */
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     /**
@@ -87,12 +106,16 @@ contract CerttifyCrowdsale {
      * @param _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
      * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
      * @param _wallet Address for collecting the raised fund
-     * @param _founderTokenUnlock Timestamp in seconds since Unix epoch for unlocking founders' token
+     * @param _founderTokenUnlockPhase1 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 1
+     * @param _founderTokenUnlockPhase2 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 2
+     * @param _founderTokenUnlockPhase3 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 3
+     * @param _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
      */
     function CerttifyCrowdsale(
         uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, 
         uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, 
-        address _wallet, uint256 _founderTokenUnlock
+        address _wallet, 
+        uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4
     ) public {
         require(_timestampStage1 > 0);
         require(_timestampStage2 > 0);
@@ -102,7 +125,10 @@ contract CerttifyCrowdsale {
         require(_weiCostOfTokenStage2 > 0);
         require(_weiCostOfTokenStage3 > 0);
         require(_wallet != address(0));
-        require(_founderTokenUnlock > 0);
+        require(_founderTokenUnlockPhase1 > 0);
+        require(_founderTokenUnlockPhase2 > 0);
+        require(_founderTokenUnlockPhase3 > 0);
+        require(_founderTokenUnlockPhase4 > 0);
 
         // Create the Certtify token for sale
         token = createTokenContract();
@@ -124,9 +150,15 @@ contract CerttifyCrowdsale {
         // Set ICO not ended
         icoEnded = false;
         // Set founder not withdrawn their token yet
-        founderTokenWithdrawn = false;
+        founderTokenWithdrawnPhase1 = false;
+        founderTokenWithdrawnPhase2 = false;
+        founderTokenWithdrawnPhase3 = false;
+        founderTokenWithdrawnPhase4 = false;
         // Set the time when founders' token are unlocked
-        founderTokenUnlock = _founderTokenUnlock;
+        founderTokenUnlockPhase1 = _founderTokenUnlockPhase1;
+        founderTokenUnlockPhase2 = _founderTokenUnlockPhase2;
+        founderTokenUnlockPhase3 = _founderTokenUnlockPhase3;
+        founderTokenUnlockPhase4 = _founderTokenUnlockPhase4;
     }
 
     /** 
@@ -201,11 +233,19 @@ contract CerttifyCrowdsale {
         // Check if this function is already called
         require(!icoEnded);
         // Calculate the amount of token founders will be able to withdraw
-        founderWithdrawable = tokenSold.div(3); // 1/3 of all token sold ==> 25% of all available token including these token
+        // A total of 1/3 of all token sold, or 25% of all available token including these token, is withdrawable
+        uint256 founderWithdrawableTotal = tokenSold.div(3);
+        // 10% of total supply is withdrawable in phase 1 unlock (25% * 2/5 = 10%)
+        // Used for supporting early adopters 
+        founderWithdrawablePhase1 = founderWithdrawableTotal.mul(2).div(5);
+        // 5% of total supply is withdrawable in phase 2, 3 and 4 unlock, each with 5% of total supply
+        founderWithdrawablePhase2 = founderWithdrawableTotal.div(5);
+        founderWithdrawablePhase3 = founderWithdrawableTotal.div(5);
+        founderWithdrawablePhase4 = founderWithdrawableTotal.div(5);
         // End the ICO
         icoEnded = true;
         // Burn the remaining token if any
-        uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(founderWithdrawable);
+        uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(founderWithdrawableTotal);
         if (tokenLeft != 0) {
             token.burn(tokenLeft, "NOTE:ICO_BURN_LEFT");
         }
@@ -219,16 +259,39 @@ contract CerttifyCrowdsale {
     function founderWithdraw() public {
         // Check if called by contract owner
         require(msg.sender == contractOwner);
-        // Check if founders' token is unlocked
-        require(now >= founderTokenUnlock);
         // Check if postICO is already called, as it set the founderWithdrawable variable
         require(icoEnded);
-        // Check if founders has already withdrawn their token
-        require(!founderTokenWithdrawn);
-        // Set founderTokenWithdrawn to true
-        founderTokenWithdrawn = true;
-        // Send the withdrawable amount of token to contractOwner's address
-        token.transfer(contractOwner, founderWithdrawable);
+        // If phase 4 has passed, all token is already withdrawn and there are no meaning going forward
+        require(!founderTokenWithdrawnPhase4);
+        if (!founderTokenWithdrawnPhase1) {
+            // Withdraw token permissible in phase 1
+            // Check if founders' token is unlocked
+            require(now >= founderTokenUnlockPhase1);
+            founderTokenWithdrawnPhase1 = true;
+            // Send the withdrawable amount of token to contractOwner's address
+            token.transfer(contractOwner, founderWithdrawablePhase1);
+        } else if (!founderTokenWithdrawnPhase2) {
+            // Withdraw token permissible in phase 2
+            // Check if founders' token is unlocked
+            require(now >= founderTokenUnlockPhase2);
+            founderTokenWithdrawnPhase2 = true;
+            // Send the withdrawable amount of token to contractOwner's address
+            token.transfer(contractOwner, founderWithdrawablePhase2);
+        } else if (!founderTokenWithdrawnPhase3) {
+            // Withdraw token permissible in phase 3
+            // Check if founders' token is unlocked
+            require(now >= founderTokenUnlockPhase3);
+            founderTokenWithdrawnPhase3 = true;
+            // Send the withdrawable amount of token to contractOwner's address
+            token.transfer(contractOwner, founderWithdrawablePhase3);
+        } else {
+            // Withdraw token permissible in phase 4
+            // Check if founders' token is unlocked
+            require(now >= founderTokenUnlockPhase4);
+            founderTokenWithdrawnPhase4 = true;
+            // Send the withdrawable amount of token to contractOwner's address
+            token.transfer(contractOwner, founderWithdrawablePhase4);
+        }
     }
 
     /**
