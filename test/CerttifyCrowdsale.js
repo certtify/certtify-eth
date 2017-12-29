@@ -358,12 +358,13 @@ contract('CerttifyCrowdsale', function(accounts) {
             assert.equal(balances[0].valueOf(), maxPreSale.mul(0.5), "Pre-sale function did not reward token correctly when called repeatly");
             assert.equal(balances[1].valueOf(), maxPreSale.mul(0.5), "Pre-sale function did not reward token correctly when called repeatly");
             // Sell one more token, this should be invalid
-            return instance.buyTokensPreSale(accounts[3], 1, {
+            return assertRevert(instance.buyTokensPreSale(accounts[3], 1, {
                 from: accounts[0]
-            });
+            }));
+        }).then(function() {
+            done();
         }).catch(function(err) {
-            // This should fail
-            done()
+            done(err);
         });
     });
 
@@ -371,12 +372,13 @@ contract('CerttifyCrowdsale', function(accounts) {
         Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
             from: accounts[0]
         }).then(function(_instance) {
-            return _instance.buyTokensPreSale(accounts[1], 1, {
+            return assertRevert(_instance.buyTokensPreSale(accounts[1], 1, {
                 from: accounts[2]
-            });
-        }).catch(function(err) {
-            // This should fail
+            }));
+        }).then(function() {
             done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
@@ -384,12 +386,13 @@ contract('CerttifyCrowdsale', function(accounts) {
         Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
             from: accounts[0]
         }).then(function(_instance) {
-            return _instance.buyTokensPreSale('0x0000000000000000000000000000000000000000', 1, {
+            return assertRevert(_instance.buyTokensPreSale('0x0000000000000000000000000000000000000000', 1, {
                 from: accounts[0]
-            });
-        }).catch(function(err) {
-            // This should fail
+            }));
+        }).then(function() {
             done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
@@ -397,12 +400,13 @@ contract('CerttifyCrowdsale', function(accounts) {
         Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
             from: accounts[0]
         }).then(function(_instance) {
-            return _instance.buyTokensPreSale(accounts[1], web3.toBigNumber('-1e+18'), {
+            return assertRevert(_instance.buyTokensPreSale(accounts[1], web3.toBigNumber('-1e+18'), {
                 from: accounts[0]
-            });
-        }).catch(function(err) {
-            // This should fail
+            }));
+        }).then(function() {
             done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
@@ -411,12 +415,13 @@ contract('CerttifyCrowdsale', function(accounts) {
         Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
             from: accounts[0]
         }).then(function(_instance) {
-            return _instance.buyTokensPreSale(accounts[1], 1, {
+            return assertRevert(_instance.buyTokensPreSale(accounts[1], 1, {
                 from: accounts[0]
-            });
-        }).catch(function(err) {
-            // This should fail
+            }));
+        }).then(function() {
             done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
@@ -623,16 +628,15 @@ contract('CerttifyCrowdsale', function(accounts) {
         Crowdsale.new(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
             from: accounts[0]
         }).then(function(instance) {
-            return instance.buyTokens('0x0000000000000000000000000000000000000000', {
+            return assertRevert(instance.buyTokens('0x0000000000000000000000000000000000000000', {
                 from: accounts[1],
                 gas: 500000,
                 value: web3._extend.utils.toWei(1, 'ether')
-            });
+            }));
         }).then(function() {
-            done('ICO request to address(0) does not result in error')
-        }).catch(function(err) {
-            // This should fail
             done();
+        }).catch(function(err) {
+            done('ICO request to address(0) does not result in error');
         });
     });
 
@@ -769,13 +773,13 @@ contract('CerttifyCrowdsale', function(accounts) {
             // Balance of the contract address should be founderWithdrawable, since it still holds token that is later distributed to owners
             assert(balanceOfContract.cmp(withdrawableTotal) == 0, 'Contract still holds token after the postICO call');
             // Test if postICO can be called after a successful call
-            return instance.postICO({
+            return assertRevert(instance.postICO({
                 from: accounts[0]
-            });
+            }));
         }).then(function() {
-            done('postICO can be called after a successful call');
-        }).catch(function() {
             done();
+        }).catch(function() {
+            done('postICO can be called after a successful call');
         });
     });
 
@@ -792,13 +796,13 @@ contract('CerttifyCrowdsale', function(accounts) {
             // Assert ICO has ended
             assert(hasEnded, 'ICO did not end after end timestamp');
             // Call postICO from another address
-            return instance.postICO({
+            return assertRevert(instance.postICO({
                 from: accounts[1]
-            });
+            }));
         }).then(function() {
-            done('postICO can be called by people other than contract owner');
-        }).catch(function() {
             done();
+        }).catch(function() {
+            done('postICO can be called by people other than contract owner');
         });
     });
 
@@ -815,13 +819,13 @@ contract('CerttifyCrowdsale', function(accounts) {
             // Assert ICO has ended
             assert(!hasEnded, 'ICO end before end timestamp');
             // Call postICO from another address
-            return instance.postICO({
+            return assertRevert(instance.postICO({
                 from: accounts[0]
-            });
+            }));
         }).then(function() {
-            done('postICO can be called before ICO is over');
-        }).catch(function() {
             done();
+        }).catch(function() {
+            done('postICO can be called before ICO is over');
         });
     });
 
@@ -1083,17 +1087,17 @@ contract('CerttifyCrowdsale', function(accounts) {
     it('founderWithdraw can only be called by contract owner', function(done) {
         var instance = null;
         // Deploy contract with founders' token unlocked already
-        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, getTimestamp(0), {
+        Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), {
             from: accounts[0]
         }).then(function(_instance) {
             instance = _instance;
             return instance.postICO();
         }).then(function() {
-            return instance.founderWithdraw({ from: accounts[1] });
+            return assertRevert(instance.founderWithdraw({ from: accounts[1] }));
         }).then(function() {
-            done('No error is thrown when founderWithdraw() is not called by owner');
-        }).catch(function(err) {
             done();
+        }).catch(function(err) {
+            done('No error is thrown when founderWithdraw() is not called by owner');
         });
     });
 
@@ -1106,11 +1110,11 @@ contract('CerttifyCrowdsale', function(accounts) {
             instance = _instance;
             return instance.postICO();
         }).then(function() {
-            return instance.founderWithdraw();
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
-            done('No error is thrown when founderWithdraw() is called before unlock time');
-        }).catch(function(err) {
             done();
+        }).catch(function(err) {
+            done('No error is thrown when founderWithdraw() is called before unlock time');
         });
     });
 
@@ -1119,11 +1123,11 @@ contract('CerttifyCrowdsale', function(accounts) {
         Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0), {
             from: accounts[0]
         }).then(function(instance) {
-            return instance.founderWithdraw();
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
-            done('No error is thrown when founderWithdraw() is called before postICO is called');
-        }).catch(function(err) {
             done();
+        }).catch(function(err) {
+            done('No error is thrown when founderWithdraw() is called before postICO is called');
         });
     })
 
