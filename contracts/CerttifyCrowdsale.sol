@@ -140,20 +140,13 @@ contract CerttifyCrowdsale {
         startTimeStage3 = _timestampStage3;
         endTime = _timestampEndTime;
         // Calculate the rate for each stage
-        rateStage1 = _weiCostOfTokenStage1.mul(1 wei);
-        rateStage2 = _weiCostOfTokenStage2.mul(1 wei);
-        rateStage3 = _weiCostOfTokenStage3.mul(1 wei);
+        rateStage1 = _weiCostOfTokenStage1;
+        rateStage2 = _weiCostOfTokenStage2;
+        rateStage3 = _weiCostOfTokenStage3;
         // Set Ethereum collection address
         wallet = _wallet;
         // Set contract owner
         contractOwner = msg.sender;
-        // Set ICO not ended
-        icoEnded = false;
-        // Set founder not withdrawn their token yet
-        founderTokenWithdrawnPhase1 = false;
-        founderTokenWithdrawnPhase2 = false;
-        founderTokenWithdrawnPhase3 = false;
-        founderTokenWithdrawnPhase4 = false;
         // Set the time when founders' token are unlocked
         founderTokenUnlockPhase1 = _founderTokenUnlockPhase1;
         founderTokenUnlockPhase2 = _founderTokenUnlockPhase2;
