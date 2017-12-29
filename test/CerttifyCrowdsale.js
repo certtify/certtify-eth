@@ -129,14 +129,14 @@ var confirmWithdraw = function(instance, tokenInstance, deployerAddress, deploye
     });
 }
 /**
- * Assert an async function will returns 'revert' on EVM upon execution
+ * Assert a promise will returns 'revert' on EVM upon execution
  * Modified from assertRevert from zeppelin-soldity
  * 
  * Returns a promise which will resolve if revert event is detected, or throw if not
  */
-function assertRevert(fn) {
+function assertRevert(promise) {
     return new Promise(function(resolve, reject) {
-        fn().then(function() {
+        promise.then(function() {
             reject('Error containing "revert" must be returned');
         }).catch(function(err) {
             if (err.message.search('revert') == -1) {
@@ -918,7 +918,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             return confirmWithdraw(instance, tokenInstance, accounts[0], deployerBalance, contractBalance);
         }).then(function() {
             // Call founderWithdraw() after all tokens withdrawn, should fail
-            return assertRevert(instance.founderWithdraw);
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
             done();
         }).catch(function(err) {
@@ -984,7 +984,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             });
         }).then(function() {
             // Imemediately call founderWithdraw (phase 1), should fail
-            return assertRevert(instance.founderWithdraw);
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
             // Wait for Phase 1 Unlock
             var now = getTimestamp(0);
@@ -1006,7 +1006,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             return confirmWithdraw(instance, tokenInstance, accounts[0], deployerBalance, contractBalance);
         }).then(function() {
             // Imemediately call founderWithdraw (phase 2), should fail
-            return assertRevert(instance.founderWithdraw);
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
             // Wait for Phase 2 Unlock
             var now = getTimestamp(0);
@@ -1028,7 +1028,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             return confirmWithdraw(instance, tokenInstance, accounts[0], deployerBalance, contractBalance);
         }).then(function() {
             // Imemediately call founderWithdraw (phase 3), should fail
-            return assertRevert(instance.founderWithdraw);
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
             // Wait for Phase 3 Unlock
             var now = getTimestamp(0);
@@ -1050,7 +1050,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             return confirmWithdraw(instance, tokenInstance, accounts[0], deployerBalance, contractBalance);
         }).then(function() {
             // Imemediately call founderWithdraw (phase 4), should fail
-            return assertRevert(instance.founderWithdraw);
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
             // Wait for Phase 4 Unlock
             var now = getTimestamp(0);
@@ -1072,7 +1072,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             return confirmWithdraw(instance, tokenInstance, accounts[0], deployerBalance, contractBalance);
         }).then(function() {
             // Call founderWithdraw after all tokens are withdrawn, shoulf fail
-            return assertRevert(instance.founderWithdraw);
+            return assertRevert(instance.founderWithdraw());
         }).then(function() {
             done();
         }).catch(function(err) {
