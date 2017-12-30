@@ -240,7 +240,7 @@ contract CerttifyCrowdsale {
         // Burn the remaining token if any
         uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(founderWithdrawableTotal);
         if (tokenLeft != 0) {
-            token.burn(tokenLeft, "NOTE:ICO_BURN_LEFT");
+            token.burn(tokenLeft, "ICO_BURN_TOKEN_UNSOLD");
         }
         // Remove lock up
         token.unlock();
