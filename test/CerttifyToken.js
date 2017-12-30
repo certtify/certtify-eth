@@ -16,6 +16,17 @@ var assertRevert = function(error) {
 var toDecimal = function(raw) {
 	return web3.toBigNumber(raw).mul(web3.toBigNumber('1e+18'));
 }
+/**
+ * Build a encoded certificate based on a string content
+ * @param {string} content Content of the certificate
+ * @return {string} Encoded certificate in utf-8
+ */
+var buildCert = function(content) {
+    var purpose = Buffer.from([0x01]);
+    var type = Buffer.from([0x01]);
+    var contentBuffer = Buffer.from(content, 'utf8');
+    return Buffer.concat([purpose, type, contentBuffer]).toString('utf8');
+}
 
 const tokenToCreate = web3.toBigNumber(500000000); // 5e8
 const tokenCreatedDecimals = toDecimal(tokenToCreate);
@@ -100,7 +111,7 @@ contract('CerttifyToken', function(accounts) {
     it('Burn token subtract from balance correctly and reduce the total supply', function(done) {
         token.unlock().then(function() {
             // Burn() to burn 1e+26 token
-            return token.burn(tokenToBurn, "SOME_WAVES_ADDRESS");
+            return token.burn(tokenToBurn, "SOME_MESSAGE");
         }).then(function() {
             // Wait for burn() to execute, and call balanceOf(accounts[0])
             return token.balanceOf.call(accounts[0]);
@@ -118,13 +129,13 @@ contract('CerttifyToken', function(accounts) {
     it('Burn token log is logged correctly', function(done) {
         token.unlock().then(function() {
             // Wait for contract deployment, and call burn() to burn 2e+26 token
-            return token.burn(web3.toBigNumber('2e+26'), "SOME_WAVES_ADDRESS_123");
+            return token.burn(web3.toBigNumber('2e+26'), "SOME_MESSAGE");
         }).then(function() {
             token.Burn().get(function(err, logs) {
                 var event = logs[0].args;
                 assert.equal(event.burner, accounts[0], "Burn log did not log the burner address correctly");
                 assert.equal(event.value.valueOf(), web3.toBigNumber('2e+26'), "Burn log did not log the amount burnt correctly");
-                assert.equal(event.wavesAddress, "SOME_WAVES_ADDRESS_123", "Burn log did not log the given Waves address correctly");
+                assert.equal(event.message, "SOME_MESSAGE", "Burn log did not log the given Waves address correctly");
                 done();
             });
         })
@@ -133,17 +144,54 @@ contract('CerttifyToken', function(accounts) {
     it('Cannot burn more than what you have', function(done) {
         token.unlock().then(function() {
             // Wait for contract deployment, and call burn() to burn 6e+26 token (more than total supply)
-            return token.burn(web3.toBigNumber('6e+26'), "SOME_WAVES_ADDRESS");
+            return token.burn(web3.toBigNumber('6e+26'), "SOME_MESSAGE");
         }).catch(function(err) {
             // Expect a error
             // Try to burn token from address with no token
-            return token.burn(web3.toBigNumber('1'), "SOME_WAVES_ADDRESS", {
+            return token.burn(web3.toBigNumber('1'), "SOME_MESSAGE", {
                 'from': accounts[1]
             });
         }).catch(function(err) {
             // Expect a error
             assertRevert(err);
             done();
+        });
+    });
+
+    it('Issue certificate correctly', function(done) {
+        var tokenBurnt = toDecimal(1);
+        var certificate = buildCert('A'.repeat(100));
+        token.unlock().then(function() {
+            // Issue a test certificate
+            return token.issueCert(tokenBurnt, certificate);
+        }).then(function() {
+            // Test CertIssue Log
+            return new Promise(function(resolve, reject) {
+                token.IssueCert().get(function(err, logs) {
+                    if (err) { reject(err) }
+                    var event = logs[0].args;
+                    assert.equal(event.certIssuer, accounts[0], 'Certificate issuer mismatched');
+                    assert(tokenBurnt.cmp(event.value) == 0, 'Number of token burnt mismatched');
+                    assert.equal(event.cert, certificate, 'Certificate mismatched');
+                    resolve();
+                });
+            });
+        }).then(function() {
+            // Test Burn Log
+            return new Promise(function(resolve, reject) {
+                token.Burn().get(function(err, logs) {
+                    if (err) { reject(err) }
+                    var event = logs[0].args;
+                    assert.equal(event.burner, accounts[0], "Burn log did not log the burner address correctly");
+                    assert(event.value.cmp(tokenBurnt) == 0, "Burn log did not log the amount burnt correctly");
+                    assert.equal(event.message, "", "Burn log did not log the given Waves address correctly");
+                    resolve();
+                });
+            });
+        }).then(function() {
+            done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
