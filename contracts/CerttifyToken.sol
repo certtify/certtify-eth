@@ -6,19 +6,20 @@ import './zeppelin-solidity/StandardToken.sol';
  * @title Certtify Token
  * @dev Contract of Certtify token
  * 
- * @dev The contract is composed of a StandardToken with a customized Burn function and event
- * @dev The customized burn function and event will be use in token conversion with Waves later on
+ * @dev The contract is composed of a StandardToken with a customized Burn and CertIssue function and event
+ * @dev The customized function and event will be use in token burnt after ICO and in issuing certificate
  */
 contract CerttifyToken is StandardToken {
 
-    event Burn(address indexed burner, uint256 value, string wavesAddress);
+    event Burn(address indexed burner, uint256 value, string message);
+    event IssueCert(bytes32 indexed id, address certIssuer, uint256 value, string cert);
 
     string public name = "Certtify Token";
     string public symbol = "CTF";
     uint8 public decimals = 18;
 
     address public deployer;
-    bool public lockup = true; 
+    bool public lockup = true;
 
     function CerttifyToken(uint256 maxSupply) public {
         totalSupply = maxSupply.mul(10 ** uint256(decimals));
@@ -58,11 +59,11 @@ contract CerttifyToken is StandardToken {
     }
 
     /**
-     * @dev Burns a specific amount of tokens, and optionally broadcasting a Waves address.
+     * @dev Burns a specific amount of tokens, and optionally broadcasting a message.
      * @param _value The amount of token to be burned.
-     * @param _wavesAddress The Waves address where converted token should be sent to.
+     * @param _message Message to be included in the Burn event log.
      */
-    function burn(uint256 _value, string _wavesAddress) public afterLockup() {
+    function burn(uint256 _value, string _message) public afterLockup() {
         require(_value > 0);
         require(_value <= balances[msg.sender]);
         // no need to require value <= totalSupply, since that would imply the
@@ -72,7 +73,31 @@ contract CerttifyToken is StandardToken {
         totalSupply = totalSupply.sub(_value);
         balances[burner] = balances[burner].sub(_value);
         // Log Burn event
-        Burn(burner, _value, _wavesAddress);
+        Burn(burner, _value, _message);
+    }
+
+    /**
+     * @dev Burns a specific amount of tokens, and issue a certificate.
+     * @param _value The amount of token to be burned.
+     * @param _cert Certificate
+     */
+    function issueCert(uint256 _value, string _cert) public afterLockup() {
+        // Burn the token
+        burn(_value, "");
+        // Log IssueCert event
+        IssueCert(hashCert(block.number, msg.sender, _value, _cert), msg.sender, _value, _cert);
+    }
+
+    /**
+     * @dev Hash a certificate and produces a unique id for that certificate.
+     * @param _block Block number where the certificate is included
+     * @param _certIssuer Address of certificate issuer
+     * @param _value Amount of token burnt
+     * @param _cert Certificate
+     */
+    function hashCert(uint256 _block, address _certIssuer, uint256 _value, string _cert) internal pure returns (bytes32) {
+        uint256 hashParam = 4;
+        return keccak256(hashParam, _block, _certIssuer, _value, _cert);
     }
 
 }
