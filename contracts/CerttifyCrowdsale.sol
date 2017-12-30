@@ -5,8 +5,9 @@ import './math/SafeMath.sol';
 
 /**
  * @title Certtify Token Crowdsale Contract
+ * @author Ken Sze
  * 
- * @dev Crowdsale contract of Certtify token
+ * @notice Crowdsale contract of Certtify token
  * @dev Developed based on zeppelin-solidity/contracts/crowdsale/Crowdsale.sol
  */
 contract CerttifyCrowdsale {
@@ -16,11 +17,15 @@ contract CerttifyCrowdsale {
     // Token to be sold
     CerttifyToken public token;
 
-    // Start and end timestamps when crowdsale and stage is opened
+    // Start timestamp of pre-sale
     uint256 public startTimeStage0;
+    // Start timestamp of ICO phase 1
     uint256 public startTimeStage1;
+    // Start timestamp of ICO phase 2
     uint256 public startTimeStage2;
+    // Start timestamp of ICO phase 3
     uint256 public startTimeStage3;
+    // End timestamp of ICO
     uint256 public endTime;
 
     // Address where ETH received is sent to;
@@ -28,21 +33,31 @@ contract CerttifyCrowdsale {
     // Address of the contract owner
     address public contractOwner;
 
-    // Number of token gets per wei received in each crowdsale stage
+    // Number of token gets per wei received in ICO phase 1
     uint256 public rateStage1;
+    // Number of token gets per wei received in ICO phase 2
     uint256 public rateStage2;
+    // Number of token gets per wei received in ICO phase 3
     uint256 public rateStage3;
 
-    // Cap of the crowdsale
-    uint256 public constant MAX_SUPPLY = 500000000; // 5e8
-    uint256 public MAX_SUPPLY_DECIMAL = MAX_SUPPLY.mul(10 ** uint256(18)); // MAX_SUPPLY in decimal form
-    uint256 public MAX_ALLOWED_PRE_SALE = MAX_SUPPLY_DECIMAL.div(20); // 5% of MAX_SUPPLY
-    uint256 public MAX_ALLOWED_STAGE_1 = MAX_SUPPLY_DECIMAL.div(5); // 20% of MAX_SUPPLY
-    uint256 public MAX_ALLOWED_STAGE_2 = MAX_SUPPLY_DECIMAL.div(4); // 25% of MAX_SUPPLY
-    uint256 public MAX_ALLOWED_STAGE_3 = MAX_SUPPLY_DECIMAL.div(4); // 25% of MAX_SUPPLY
-    uint256 public MAX_ALLOWED_BY_STAGE_1 = MAX_ALLOWED_PRE_SALE.add(MAX_ALLOWED_STAGE_1); // 25% of MAX_SUPPLY
-    uint256 public MAX_ALLOWED_BY_STAGE_2 = MAX_ALLOWED_BY_STAGE_1.add(MAX_ALLOWED_STAGE_2); // 50% of MAX_SUPPLY
-    uint256 public MAX_ALLOWED_TOTAL =  MAX_ALLOWED_BY_STAGE_2.add(MAX_ALLOWED_STAGE_3); // 75% of MAX_SUPPLY
+    // Maximum CTF token supply created
+    uint256 public constant MAX_SUPPLY = 500000000;
+    // Maximum CTF token supply created in decimals
+    uint256 public MAX_SUPPLY_DECIMAL = MAX_SUPPLY.mul(10 ** uint256(18));
+    // Maximum CTF token available in pre-sale, equates to 5% of total supply
+    uint256 public MAX_ALLOWED_PRE_SALE = MAX_SUPPLY_DECIMAL.div(20);
+    // Maximum CTF token available in ICO phase 1, equates to 20% of total supply
+    uint256 public MAX_ALLOWED_STAGE_1 = MAX_SUPPLY_DECIMAL.div(5);
+    // Maximum CTF token available in ICO phase 2, equates to 25% of total supply
+    uint256 public MAX_ALLOWED_STAGE_2 = MAX_SUPPLY_DECIMAL.div(4);
+    // Maximum CTF token available in ICO phase 3, equates to 25% of total supply
+    uint256 public MAX_ALLOWED_STAGE_3 = MAX_SUPPLY_DECIMAL.div(4);
+    // Maximum CTF token available BY ICO phase 1, equates to 25% of total supply
+    uint256 public MAX_ALLOWED_BY_STAGE_1 = MAX_ALLOWED_PRE_SALE.add(MAX_ALLOWED_STAGE_1);
+    // Maximum CTF token available BY ICO phase 2, equates to 50% of total supply
+    uint256 public MAX_ALLOWED_BY_STAGE_2 = MAX_ALLOWED_BY_STAGE_1.add(MAX_ALLOWED_STAGE_2);
+    // Maximum CTF token available BY ICO phase 3, equates to 75% of total supply
+    uint256 public MAX_ALLOWED_TOTAL =  MAX_ALLOWED_BY_STAGE_2.add(MAX_ALLOWED_STAGE_3);
 
     // Amount of wei raised so far
     uint256 public weiRaised;
@@ -79,7 +94,7 @@ contract CerttifyCrowdsale {
     uint256 public founderWithdrawablePhase4;
 
     /**
-     * Event for token purchase logging
+     * @notice Event for token purchase logging
      * @param purchaser who paid for the tokens
      * @param beneficiary who got the tokens
      * @param value weis paid for purchase
@@ -88,7 +103,8 @@ contract CerttifyCrowdsale {
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     /**
-     * Fix for ERC20 short address attack
+     * @notice Fix for ERC20 short address attack
+     * @param size Expected data size
      */
     modifier onlyPayloadSize(uint256 size) {
         require(msg.data.length >= size + 4);
@@ -96,7 +112,7 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * Construct the crowdsale contact
+     * @notice Construct the crowdsale contact
      *
      * @param _timestampStage1 Timestamp in seconds since Unix epoch for stage 1 ICO to begin
      * @param _timestampStage2 Timestamp in seconds since Unix epoch for stage 2 ICO to begin
@@ -155,21 +171,23 @@ contract CerttifyCrowdsale {
     }
 
     /** 
-     * Creates the Certtify token to be sold
+     * @notice Creates the Certtify token to be sold
+     * @return CerttifyToken Deployed CTF contract
      */
     function createTokenContract() internal returns (CerttifyToken) {
         return new CerttifyToken(MAX_SUPPLY);
     }
 
     /** 
-     * Fallback function can be used to buy tokens
+     * @notice Fallback function can be used to buy tokens
      */
     function () external payable {
         buyTokens(msg.sender);
     }
 
     /**
-     * Function for handling buy token request
+     * @notice Function for handling buy token request
+     * @param beneficiary Address of beneficiary
      */
     function buyTokens(address beneficiary) public payable {
         // Checking if purchase is valid
@@ -192,7 +210,9 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * Function for handling pre-sale
+     * @notice Function for handling pre-sale
+     * @param beneficiary Address of beneficiary
+     * @param tokens Number of tokens to be sent
      */
     function buyTokensPreSale(address beneficiary, uint256 tokens) public onlyPayloadSize(2 * 32) {
         // Check if called by contract owner
@@ -211,8 +231,7 @@ contract CerttifyCrowdsale {
     }
     
     /**
-     * Function for contract owner to execute after the crowdsale
-     * 
+     * @notice Function for contract owner to execute after the crowdsale
      * This function will,
      *      1. Set the amount of token withdrawable by founders which equates to 25% of all available token after withdrawl
      *      2. Burn all remaining tokens
@@ -247,7 +266,7 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * Allow founders to withdraw their token after lockup period
+     * @notice Allow founders to withdraw their token after lockup period
      */
     function founderWithdraw() public {
         // Check if called by contract owner
@@ -288,16 +307,15 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * Send ether to fund collection address
+     * @notice Send ether to fund collection address
      */
     function forwardFunds() internal {
         wallet.transfer(msg.value);
     }
 
     /** 
-     * Check if the purchase is valid
-     *
-     * @return true if the transaction can buy tokens
+     * @notice Check if the purchase is valid
+     * @return bool Returns true if the transaction can buy tokens
      */
     function validPurchase() internal view returns (bool) {
         // Purchase is within period as long as it is after stage 1 ICO and before ICO ends
@@ -308,17 +326,15 @@ contract CerttifyCrowdsale {
     }
 
     /** 
-     * Check if the purchase request will lead to token sold beyond MAX_ALLOWED_TOTAL
-     *
-     * @return true if the purchase request can be entertained
+     * @notice Check if the purchase request will lead to token sold beyond MAX_ALLOWED_TOTAL
+     * @return bool Returns true if the purchase request can be entertained
      */
     function checkCapNotReached(uint256 tokenBuyReq) internal view returns (bool) {
         return tokenSold.add(tokenBuyReq) <= MAX_ALLOWED_TOTAL;
     }
 
     /**
-     * Calculate the current ICO stage
-     *
+     * @notice Calculate the current ICO stage
      * @return uint8 The current ICO stage of Certtify token, either 0, 1, 2, or 3
      */
     function getCurrentStage() internal view returns (uint8) {
@@ -334,8 +350,7 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * Calculate the current ICO rate based SOLELY on ICO stage
-     *
+     * @notice Calculate the current ICO rate based SOLELY on ICO stage
      * @return uint256 Current rate based SOLELY on ICO stage
      */
     function getCurrentRateByStage() internal view returns (uint256) {
@@ -351,9 +366,8 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * Calculate the current ICO rate based SOLELY on amount of token sold
-     * For instance, if the amount token is beyond the cap of stage 1, but not stage 2, then rate of stage 2 is returned
-     *
+     * @notice Calculate the current ICO rate based SOLELY on amount of token sold
+     * @dev For instance, if the amount token is beyond the cap of stage 1, but not stage 2, then rate of stage 2 is returned
      * @return uint256 Current rate based SOLELY on amount of token sold
      */
     function getCurrentRateByTokenSold() internal view returns (uint256) {
@@ -367,8 +381,7 @@ contract CerttifyCrowdsale {
     }
     
     /**
-     * Calculate the current ICO rate based on ICO stage and the amount of token sold
-     *
+     * @notice Calculate the current ICO rate based on ICO stage and the amount of token sold
      * @return uint256 The current ICO rate
      */
     function getCurrentRate() internal view returns (uint256) {
@@ -383,7 +396,8 @@ contract CerttifyCrowdsale {
     }
 
     /**
-     * @return true if crowdsale event has ended
+     * @notice Check if ICO has ended
+     * @return bool Returns true if crowdsale event has ended
      */
     function hasEnded() public view returns (bool) {
         return now >= endTime || tokenSold >= MAX_ALLOWED_TOTAL;
