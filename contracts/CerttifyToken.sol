@@ -26,7 +26,7 @@ contract CerttifyToken is StandardToken {
      * @param value Number of tokens burnt
      * @param cert Certificate
      */
-    event IssueCert(bytes32 indexed id, address certIssuer, uint256 value, string cert);
+    event IssueCert(bytes32 indexed id, address certIssuer, uint256 value, bytes cert);
 
     // Name of the token
     string public name = "Certtify Token";
@@ -104,7 +104,7 @@ contract CerttifyToken is StandardToken {
      * @param _value The amount of token to be burned.
      * @param _cert Certificate
      */
-    function issueCert(uint256 _value, string _cert) public afterLockup() {
+    function issueCert(uint256 _value, bytes _cert) public afterLockup() {
         // Burn the token
         burn(_value, "");
         // Log IssueCert event
@@ -118,9 +118,8 @@ contract CerttifyToken is StandardToken {
      * @param _value Amount of token burnt
      * @param _cert Certificate
      */
-    function hashCert(uint256 _block, address _certIssuer, uint256 _value, string _cert) internal pure returns (bytes32) {
-        uint256 hashParam = 4;
-        return keccak256(hashParam, _block, _certIssuer, _value, _cert);
+    function hashCert(uint256 _block, address _certIssuer, uint256 _value, bytes _cert) internal pure returns (bytes32) {
+        return keccak256(_block, _certIssuer, _value, _cert);
     }
 
 }
