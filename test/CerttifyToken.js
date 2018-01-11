@@ -25,7 +25,7 @@ var buildCert = function(content) {
     var purpose = Buffer.from([0x01]);
     var type = Buffer.from([0x01]);
     var contentBuffer = Buffer.from(content, 'utf8');
-    return Buffer.concat([purpose, type, contentBuffer]).toString('utf8');
+    return '0x' + Buffer.concat([purpose, type, contentBuffer]).toString('hex');
 }
 
 const tokenToCreate = web3.toBigNumber(500000000); // 5e8
