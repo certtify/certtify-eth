@@ -104,22 +104,11 @@ contract CerttifyToken is StandardToken {
      * @param _value The amount of token to be burned.
      * @param _cert Certificate
      */
-    function issueCert(uint256 _value, bytes _cert) public afterLockup() {
+    function issueCert(uint256 _value, bytes _cert) external afterLockup() {
         // Burn the token
         burn(_value, "");
         // Log IssueCert event
-        IssueCert(hashCert(block.number, msg.sender, _value, _cert), msg.sender, _value, _cert);
-    }
-
-    /**
-     * @notice Hash a certificate and produces a unique id for that certificate.
-     * @param _block Block number where the certificate is included
-     * @param _certIssuer Address of certificate issuer
-     * @param _value Amount of token burnt
-     * @param _cert Certificate
-     */
-    function hashCert(uint256 _block, address _certIssuer, uint256 _value, bytes _cert) internal pure returns (bytes32) {
-        return keccak256(_block, _certIssuer, _value, _cert);
+        IssueCert(keccak256(block.number, msg.sender, _value, _cert), msg.sender, _value, _cert);
     }
 
 }
