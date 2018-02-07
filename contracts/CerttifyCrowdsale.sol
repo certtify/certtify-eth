@@ -1,6 +1,7 @@
 pragma solidity 0.4.18;
 
 import './CerttifyToken.sol';
+import './Bounty.sol';
 import './math/SafeMath.sol';
 
 /**
@@ -16,6 +17,8 @@ contract CerttifyCrowdsale {
 
     // Token to be sold
     CerttifyToken public token;
+    // Bounty contract
+    Bounty public bounty;
 
     // Start timestamp of pre-sale
     uint256 public startTimeStage0;
@@ -40,23 +43,26 @@ contract CerttifyCrowdsale {
     // Number of token gets per wei received in ICO phase 3
     uint256 public rateStage3;
 
-    // Maximum CTF token supply created
-    uint256 public constant MAX_SUPPLY = 500000000;
-    // Maximum CTF token supply created in decimals
-    uint256 public MAX_SUPPLY_DECIMAL = MAX_SUPPLY.mul(10 ** uint256(18));
+    // Number of decimals place for this token
+    uint8 public constant DECIMALS = 18;
+    // Maximum CTF token supply created, equates to 550,000,000 CTF
+    uint256 public constant MAX_SUPPLY = 550000000;
+    uint256 public constant MAX_SUPPLY_DECIMAL = 550000000 * (10 ** uint256(DECIMALS));
+    // Maximum CTF token available in bounty, equates to 2% of total supply
+    uint256 public constant MAX_ALLOWED_BOUNTY = 11000000 * (10 ** uint256(DECIMALS));
     // Maximum CTF token available in pre-sale, equates to 5% of total supply
-    uint256 public MAX_ALLOWED_PRE_SALE = MAX_SUPPLY_DECIMAL.div(20);
+    uint256 public constant MAX_ALLOWED_PRE_SALE = 27500000 * (10 ** uint256(DECIMALS));
     // Maximum CTF token available in ICO phase 1, equates to 20% of total supply
-    uint256 public MAX_ALLOWED_STAGE_1 = MAX_SUPPLY_DECIMAL.div(5);
-    // Maximum CTF token available in ICO phase 2, equates to 25% of total supply
-    uint256 public MAX_ALLOWED_STAGE_2 = MAX_SUPPLY_DECIMAL.div(4);
+    uint256 public constant MAX_ALLOWED_STAGE_1 = 110000000 * (10 ** uint256(DECIMALS));
+    // Maximum CTF token available in ICO phase 2, equates to 23% of total supply
+    uint256 public constant MAX_ALLOWED_STAGE_2 = 126500000 * (10 ** uint256(DECIMALS));
     // Maximum CTF token available in ICO phase 3, equates to 25% of total supply
-    uint256 public MAX_ALLOWED_STAGE_3 = MAX_SUPPLY_DECIMAL.div(4);
+    uint256 public constant MAX_ALLOWED_STAGE_3 = 137500000 * (10 ** uint256(DECIMALS));
     // Maximum CTF token available BY ICO phase 1, equates to 25% of total supply
     uint256 public MAX_ALLOWED_BY_STAGE_1 = MAX_ALLOWED_PRE_SALE.add(MAX_ALLOWED_STAGE_1);
-    // Maximum CTF token available BY ICO phase 2, equates to 50% of total supply
+    // Maximum CTF token available BY ICO phase 2, equates to 48% of total supply
     uint256 public MAX_ALLOWED_BY_STAGE_2 = MAX_ALLOWED_BY_STAGE_1.add(MAX_ALLOWED_STAGE_2);
-    // Maximum CTF token available BY ICO phase 3, equates to 75% of total supply
+    // Maximum CTF token available BY ICO phase 3, equates to 73% of total supply
     uint256 public MAX_ALLOWED_TOTAL =  MAX_ALLOWED_BY_STAGE_2.add(MAX_ALLOWED_STAGE_3);
 
     // Amount of wei raised so far
@@ -148,6 +154,9 @@ contract CerttifyCrowdsale {
 
         // Create the Certtify token for sale
         token = createTokenContract();
+        // Instantiate BountyDistribution contract, and grant it the token reserved for Bounty programme
+        bounty = createBountyContract();
+        token.transfer(bounty, MAX_ALLOWED_BOUNTY);
         // Pre-sale can be done immediately after contract deployment
         startTimeStage0 = now;
         // Set the starting time for each stage
@@ -176,6 +185,14 @@ contract CerttifyCrowdsale {
      */
     function createTokenContract() internal returns (CerttifyToken) {
         return new CerttifyToken(MAX_SUPPLY);
+    }
+
+    /** 
+     * @notice Creates the Bounty distributor contract
+     * @return Bounty Deployed bounty contract
+     */
+    function createBountyContract() internal returns (Bounty) {
+        return new Bounty();
     }
 
     /** 
@@ -246,7 +263,7 @@ contract CerttifyCrowdsale {
         require(!icoEnded);
         // Calculate the amount of token founders will be able to withdraw
         // A total of 1/3 of all token sold, or 25% of all available token including these token, is withdrawable
-        uint256 founderWithdrawableTotal = tokenSold.div(3);
+        uint256 founderWithdrawableTotal = tokenSold.add(MAX_ALLOWED_BOUNTY).div(3);
         // 10% of total supply is withdrawable in phase 1 unlock (25% * 2/5 = 10%)
         // Used for supporting early adopters 
         founderWithdrawablePhase1 = founderWithdrawableTotal.mul(2).div(5);
@@ -257,7 +274,7 @@ contract CerttifyCrowdsale {
         // End the ICO
         icoEnded = true;
         // Burn the remaining token if any
-        uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(founderWithdrawableTotal);
+        uint256 tokenLeft = MAX_SUPPLY_DECIMAL.sub(tokenSold).sub(MAX_ALLOWED_BOUNTY).sub(founderWithdrawableTotal);
         if (tokenLeft != 0) {
             token.burn(tokenLeft, "ICO_BURN_TOKEN_UNSOLD");
         }
