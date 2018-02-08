@@ -192,7 +192,7 @@ contract CerttifyCrowdsale {
      * @return Bounty Deployed bounty contract
      */
     function createBountyContract() internal returns (Bounty) {
-        return new Bounty();
+        return new Bounty(token);
     }
 
     /** 
