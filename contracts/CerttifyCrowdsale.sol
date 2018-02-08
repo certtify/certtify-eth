@@ -44,20 +44,20 @@ contract CerttifyCrowdsale {
     uint256 public rateStage3;
 
     // Number of decimals place for this token
-    uint8 public constant DECIMALS = 18;
+    uint256 public constant DECIMALS = 18;
     // Maximum CTF token supply created, equates to 550,000,000 CTF
     uint256 public constant MAX_SUPPLY = 550000000;
-    uint256 public constant MAX_SUPPLY_DECIMAL = 550000000 * (10 ** uint256(DECIMALS));
+    uint256 public constant MAX_SUPPLY_DECIMAL = 550000000 * (10 ** DECIMALS);
     // Maximum CTF token available in bounty, equates to 2% of total supply
-    uint256 public constant MAX_ALLOWED_BOUNTY = 11000000 * (10 ** uint256(DECIMALS));
+    uint256 public constant MAX_ALLOWED_BOUNTY = 11000000 * (10 ** DECIMALS);
     // Maximum CTF token available in pre-sale, equates to 5% of total supply
-    uint256 public constant MAX_ALLOWED_PRE_SALE = 27500000 * (10 ** uint256(DECIMALS));
+    uint256 public constant MAX_ALLOWED_PRE_SALE = 27500000 * (10 ** DECIMALS);
     // Maximum CTF token available in ICO phase 1, equates to 20% of total supply
-    uint256 public constant MAX_ALLOWED_STAGE_1 = 110000000 * (10 ** uint256(DECIMALS));
+    uint256 public constant MAX_ALLOWED_STAGE_1 = 110000000 * (10 ** DECIMALS);
     // Maximum CTF token available in ICO phase 2, equates to 23% of total supply
-    uint256 public constant MAX_ALLOWED_STAGE_2 = 126500000 * (10 ** uint256(DECIMALS));
+    uint256 public constant MAX_ALLOWED_STAGE_2 = 126500000 * (10 ** DECIMALS);
     // Maximum CTF token available in ICO phase 3, equates to 25% of total supply
-    uint256 public constant MAX_ALLOWED_STAGE_3 = 137500000 * (10 ** uint256(DECIMALS));
+    uint256 public constant MAX_ALLOWED_STAGE_3 = 137500000 * (10 ** DECIMALS);
     // Maximum CTF token available BY ICO phase 1, equates to 25% of total supply
     uint256 public MAX_ALLOWED_BY_STAGE_1 = MAX_ALLOWED_PRE_SALE.add(MAX_ALLOWED_STAGE_1);
     // Maximum CTF token available BY ICO phase 2, equates to 48% of total supply
