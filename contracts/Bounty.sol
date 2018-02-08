@@ -8,7 +8,6 @@ import './CerttifyToken.sol';
  * 
  * @notice Bounty contract of Certtify token
  */
- 
 contract Bounty {
 
     // Token to be distributed
