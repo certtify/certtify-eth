@@ -12,6 +12,8 @@ contract Bounty {
 
     // Token to be distributed
     CerttifyToken public token;
+    // Address of Bounty admin
+    address public admin;
     // Mapping for the amount of token waiting for withdrawal
     mapping(address => uint256) public bounties;
 
@@ -31,9 +33,11 @@ contract Bounty {
     /**
      * @notice Instantiate the Bounty contract
      * @param _token CerttifyToken contract
+     * @param _admin Admin of the Bounty which have permission to set the bounty for other addresses
      */
-    function Bounty(CerttifyToken _token) public {
+    function Bounty(CerttifyToken _token, address _admin) public {
         token = _token;
+        admin = _admin;
     }
 
     /**
@@ -42,6 +46,8 @@ contract Bounty {
      * @param amounts Amount of tokens to reward to each address
      */
     function setBounties(address[] beneficiaries, uint256[] amounts) external {
+        // Admin only
+        require(msg.sender == admin);
         // Require the 2 array to be of equal length
         require(beneficiaries.length == amounts.length);
         // Set the bounty for each address

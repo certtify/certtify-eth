@@ -152,6 +152,8 @@ contract CerttifyCrowdsale {
         require(_founderTokenUnlockPhase3 > 0);
         require(_founderTokenUnlockPhase4 > 0);
 
+        // Set contract owner
+        contractOwner = msg.sender;
         // Create the Certtify token for sale
         token = createTokenContract();
         // Instantiate BountyDistribution contract, and grant it the token reserved for Bounty programme
@@ -170,8 +172,6 @@ contract CerttifyCrowdsale {
         rateStage3 = _weiCostOfTokenStage3;
         // Set Ethereum collection address
         wallet = _wallet;
-        // Set contract owner
-        contractOwner = msg.sender;
         // Set the time when founders' token are unlocked
         founderTokenUnlockPhase1 = _founderTokenUnlockPhase1;
         founderTokenUnlockPhase2 = _founderTokenUnlockPhase2;
@@ -192,7 +192,7 @@ contract CerttifyCrowdsale {
      * @return Bounty Deployed bounty contract
      */
     function createBountyContract() internal returns (Bounty) {
-        return new Bounty(token);
+        return new Bounty(token, contractOwner);
     }
 
     /** 
