@@ -10,16 +10,16 @@ var mnemonic = "";
 
 module.exports = {
     networks: {
-        rinkeby: {
-			provider: new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/" + infura_key),
-			network_id: 4,
-			gas: 6500000,
+        ropsten: {
+			provider: new HDWalletProvider(mnemonic, "https://ropsten.infura.io/" + infura_key),
+			network_id: 3,
+			gas: 46000000,
             gasPrice: 1000000000
 		},
 		mainnet: {
 			provider: new HDWalletProvider(mnemonic, "https://mainnet.infura.io/" + infura_key),
 			network_id: 1,
-			gas: 6000000,
+			gas: 4600000,
             gasPrice: 1000000000
 		},
         private: {
