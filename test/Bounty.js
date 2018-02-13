@@ -71,13 +71,14 @@ contract('Bounty', function(accounts) {
         const _weiCostOfTokenStage2 = web3.toBigNumber('12000000000000');
         const _weiCostOfTokenStage3 = web3.toBigNumber('15000000000000');
         const _wallet = '0x6c2aafbb393d67e7057c34e7c8389e864928361b'; // Just a random address for testing
+        const _owner = addresses[0];
         const _founderTokenUnlockPhase1 = getTimestamp(50);
         const _founderTokenUnlockPhase2 = getTimestamp(60);
         const _founderTokenUnlockPhase3 = getTimestamp(70);
         const _founderTokenUnlockPhase4 = getTimestamp(80);
         var crowdsaleInstance = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
-            from: accounts[0]
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _owner, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+            from: accounts[1]
         }).then(function(_instance) {
             crowdsaleInstance = _instance;
             // Call postICO
