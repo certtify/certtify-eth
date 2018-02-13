@@ -134,6 +134,20 @@ contract CerttifyCrowdsale is Ownable {
      * @param _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
      */
     function CerttifyCrowdsale(uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, address _wallet, address _owner, uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4) Ownable(_owner) public {
+        // Basic checking on parameters: All are set somewhat reasonably, but are ease enough for automated test
+        require(_timestampStage1 > 0);
+        require(_timestampStage2 >= _timestampStage1);
+        require(_timestampStage3 >= _timestampStage2);
+        require(_timestampEndTime >= _timestampStage3);
+        require(_weiCostOfTokenStage1 > 0);
+        require(_weiCostOfTokenStage2 >= _weiCostOfTokenStage1);
+        require(_weiCostOfTokenStage3 >= _weiCostOfTokenStage2);
+        require(_wallet != address(0));
+        require(_owner != address(0));
+        require(_founderTokenUnlockPhase1 > 0);
+        require(_founderTokenUnlockPhase2 >= _founderTokenUnlockPhase1);
+        require(_founderTokenUnlockPhase3 >= _founderTokenUnlockPhase2);
+        require(_founderTokenUnlockPhase4 >= _founderTokenUnlockPhase3);
         // Create the Certtify token for sale
         token = createTokenContract();
         // Instantiate BountyDistribution contract, and grant it the token reserved for Bounty programme
