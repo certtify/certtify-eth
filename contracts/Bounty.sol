@@ -1,6 +1,7 @@
 pragma solidity 0.4.18;
 
 import './CerttifyToken.sol';
+import './Ownable.sol';
 
 /**
  * @title Certtify Token Bounty Contract
@@ -8,12 +9,10 @@ import './CerttifyToken.sol';
  * 
  * @notice Bounty contract of Certtify token
  */
-contract Bounty {
+contract Bounty is Ownable {
 
     // Token to be distributed
     CerttifyToken public token;
-    // Address of Bounty admin
-    address public admin;
     // Mapping for the amount of token waiting for withdrawal
     mapping(address => uint256) public bounties;
 
@@ -35,9 +34,8 @@ contract Bounty {
      * @param _token CerttifyToken contract
      * @param _admin Admin of the Bounty which have permission to set the bounty for other addresses
      */
-    function Bounty(CerttifyToken _token, address _admin) public {
+    function Bounty(CerttifyToken _token, address _admin) Ownable(_admin) public {
         token = _token;
-        admin = _admin;
     }
 
     /**
@@ -45,9 +43,7 @@ contract Bounty {
      * @param beneficiaries Array of address to be rewarded
      * @param amounts Amount of tokens to reward to each address
      */
-    function setBounties(address[] beneficiaries, uint256[] amounts) external {
-        // Admin only
-        require(msg.sender == admin);
+    function setBounties(address[] beneficiaries, uint256[] amounts) external onlyOwner {
         // Require the 2 array to be of equal length
         require(beneficiaries.length == amounts.length);
         // Set the bounty for each address

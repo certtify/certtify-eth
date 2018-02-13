@@ -2,6 +2,7 @@ pragma solidity 0.4.18;
 
 import './CerttifyToken.sol';
 import './Bounty.sol';
+import './Ownable.sol';
 import './math/SafeMath.sol';
 
 /**
@@ -11,7 +12,7 @@ import './math/SafeMath.sol';
  * @notice Crowdsale contract of Certtify token
  * @dev Developed based on zeppelin-solidity/contracts/crowdsale/Crowdsale.sol
  */
-contract CerttifyCrowdsale {
+contract CerttifyCrowdsale is Ownable {
 
     using SafeMath for uint256;
 
@@ -33,8 +34,6 @@ contract CerttifyCrowdsale {
 
     // Address where ETH received is sent to;
     address public wallet;
-    // Address of the contract owner
-    address public contractOwner;
 
     // Number of token gets per wei received in ICO phase 1
     uint256 public rateStage1;
@@ -128,32 +127,13 @@ contract CerttifyCrowdsale {
      * @param _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
      * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
      * @param _wallet Address for collecting the raised fund
+     * @param _owner Address of the owner of this contract
      * @param _founderTokenUnlockPhase1 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 1
      * @param _founderTokenUnlockPhase2 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 2
      * @param _founderTokenUnlockPhase3 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 3
      * @param _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
      */
-    function CerttifyCrowdsale(
-        uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, 
-        uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, 
-        address _wallet, 
-        uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4
-    ) public {
-        require(_timestampStage1 > 0);
-        require(_timestampStage2 > 0);
-        require(_timestampStage3 > 0);
-        require(_timestampEndTime > 0);
-        require(_weiCostOfTokenStage1 > 0);
-        require(_weiCostOfTokenStage2 > 0);
-        require(_weiCostOfTokenStage3 > 0);
-        require(_wallet != address(0));
-        require(_founderTokenUnlockPhase1 > 0);
-        require(_founderTokenUnlockPhase2 > 0);
-        require(_founderTokenUnlockPhase3 > 0);
-        require(_founderTokenUnlockPhase4 > 0);
-
-        // Set contract owner
-        contractOwner = msg.sender;
+    function CerttifyCrowdsale(uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, address _wallet, address _owner, uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4) Ownable(_owner) public {
         // Create the Certtify token for sale
         token = createTokenContract();
         // Instantiate BountyDistribution contract, and grant it the token reserved for Bounty programme
@@ -192,7 +172,7 @@ contract CerttifyCrowdsale {
      * @return Bounty Deployed bounty contract
      */
     function createBountyContract() internal returns (Bounty) {
-        return new Bounty(token, contractOwner);
+        return new Bounty(token, owner);
     }
 
     /** 
@@ -231,9 +211,7 @@ contract CerttifyCrowdsale {
      * @param beneficiary Address of beneficiary
      * @param tokens Number of tokens to be sent
      */
-    function buyTokensPreSale(address beneficiary, uint256 tokens) public onlyPayloadSize(2 * 32) {
-        // Check if called by contract owner
-        require(msg.sender == contractOwner);
+    function buyTokensPreSale(address beneficiary, uint256 tokens) public onlyPayloadSize(2 * 32) onlyOwner {
         // Checking if the pre-sale is valid
         require(beneficiary != address(0));
         require(tokens > 0);
@@ -254,9 +232,7 @@ contract CerttifyCrowdsale {
      *      2. Burn all remaining tokens
      *      3. Remove the lock up on transfer() and transferFrom() on token contract
      */
-    function postICO() public {
-        // Check if called by contract owner
-        require(msg.sender == contractOwner);
+    function postICO() public onlyOwner {
         // Check if ICO has ended
         require(hasEnded());
         // Check if this function is already called
@@ -285,9 +261,7 @@ contract CerttifyCrowdsale {
     /**
      * @notice Allow founders to withdraw their token after lockup period
      */
-    function founderWithdraw() public {
-        // Check if called by contract owner
-        require(msg.sender == contractOwner);
+    function founderWithdraw() public onlyOwner {
         // Check if postICO is already called, as it set the founderWithdrawable variable
         require(icoEnded);
         // If phase 4 has passed, all token is already withdrawn and there are no meaning going forward
@@ -297,29 +271,29 @@ contract CerttifyCrowdsale {
             // Check if founders' token is unlocked
             require(now >= founderTokenUnlockPhase1);
             founderTokenWithdrawnPhase1 = true;
-            // Send the withdrawable amount of token to contractOwner's address
-            token.transfer(contractOwner, founderWithdrawablePhase1);
+            // Send the withdrawable amount of token to owner's address
+            token.transfer(owner, founderWithdrawablePhase1);
         } else if (!founderTokenWithdrawnPhase2) {
             // Withdraw token permissible in phase 2
             // Check if founders' token is unlocked
             require(now >= founderTokenUnlockPhase2);
             founderTokenWithdrawnPhase2 = true;
-            // Send the withdrawable amount of token to contractOwner's address
-            token.transfer(contractOwner, founderWithdrawablePhase2);
+            // Send the withdrawable amount of token to owner's address
+            token.transfer(owner, founderWithdrawablePhase2);
         } else if (!founderTokenWithdrawnPhase3) {
             // Withdraw token permissible in phase 3
             // Check if founders' token is unlocked
             require(now >= founderTokenUnlockPhase3);
             founderTokenWithdrawnPhase3 = true;
-            // Send the withdrawable amount of token to contractOwner's address
-            token.transfer(contractOwner, founderWithdrawablePhase3);
+            // Send the withdrawable amount of token to owner's address
+            token.transfer(owner, founderWithdrawablePhase3);
         } else {
             // Withdraw token permissible in phase 4
             // Check if founders' token is unlocked
             require(now >= founderTokenUnlockPhase4);
             founderTokenWithdrawnPhase4 = true;
-            // Send the withdrawable amount of token to contractOwner's address
-            token.transfer(contractOwner, founderWithdrawablePhase4);
+            // Send the withdrawable amount of token to owner's address
+            token.transfer(owner, founderWithdrawablePhase4);
         }
     }
 
