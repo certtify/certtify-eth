@@ -244,9 +244,9 @@ contract('CerttifyCrowdsale', function(accounts) {
             var capStage1 = contractVars[12].valueOf();
             assert.equal(capStage1, maxSupply.mul(0.25), "Stage-1 cap is not set correctly");
             var capStage2 = contractVars[13].valueOf();
-            assert.equal(capStage2, maxSupply.mul(0.48), "Stage-2 cap is not set correctly");
+            assert.equal(capStage2, maxSupply.mul(0.47), "Stage-2 cap is not set correctly");
             var capStage3 = contractVars[14].valueOf();
-            assert.equal(capStage3, maxSupply.mul(0.73), "Stage-3 cap is not set correctly");
+            assert.equal(capStage3, maxSupply.mul(0.72), "Stage-3 cap is not set correctly");
             // Verify weiRaised and tokenSold is 0 before we do anything with it
             var weiRaised = contractVars[15].valueOf();
             assert.equal(weiRaised, 0, "Initial weiRaised is not 0");
@@ -313,9 +313,9 @@ contract('CerttifyCrowdsale', function(accounts) {
             return Promise.all(promises);
         }).then(function(balances) {
             var icoContractBalance = balances[0];
-            assert(icoContractBalance.cmp(maxSupply.mul(0.98)) == 0, 'Crowdsale contract did not retain 98% of created token');
+            assert(icoContractBalance.cmp(maxSupply.mul(0.97)) == 0, 'Crowdsale contract did not retain 97% of created token');
             var bountyBalance = balances[1];
-            assert(bountyBalance.cmp(maxSupply.mul(0.02)) == 0, 'Bounty contract did not reserve 2% of total created token');
+            assert(bountyBalance.cmp(maxSupply.mul(0.03)) == 0, 'Bounty contract did not reserve 3% of total created token');
             done();
         });
     });
@@ -526,7 +526,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             instance = _instance;
             const STAGE_1_PURCHASE = web3.toBigNumber(0.125);
             const STAGE_2_PURCHASE = web3.toBigNumber(0.08);
-            const STAGE_3_PURCHASE = web3.toBigNumber(0.06);
+            const STAGE_3_PURCHASE = web3.toBigNumber(0.0575);
             /**
              * Stage 1 ICO Purchases Test
              * 
@@ -540,7 +540,7 @@ contract('CerttifyCrowdsale', function(accounts) {
              * Stage 2 ICO Purchase Test
              * 
              * Stage 1 ICO should be closed at this point since its cap is reached
-             * Max cap of stage 2 is 23% of MAX_SUPPLY
+             * Max cap of stage 2 is 22% of MAX_SUPPLY
              * Here, we make 3 purchases, each with 8% of MAX_SUPPLY, and should over-exceed the cap of stage 2
              * [ 0% --> 8% --> 16% --> 24% (Over-bought stage 2) ]
              * 
@@ -562,12 +562,12 @@ contract('CerttifyCrowdsale', function(accounts) {
              * Stage 2 ICO should be closed as its cap is blow off
              * 
              * Max cap of stage 3 is originally 25% of MAX_SUPPLY
-             * However, since the last stage is over-bought for 24% - 23% = 1%
-             * Actual cap for stage 3 should be only 25% - 1% = 24% of MAX_SUPPLY
+             * However, since the last stage is over-bought for 24% - 22% = 2%
+             * Actual cap for stage 3 should be only 25% - 2% = 23% of MAX_SUPPLY
              * 
-             * Here we make 4 purchases, each with 6% of MAX_SUPPLY, which should just met the cap
+             * Here we make 4 purchases, each with 5.75% of MAX_SUPPLY, which should just met the cap
              * All 4 transactions should go through with rate of stage 3 ICO
-             * One more purcahses with 6% + 1 token will be made before the final purchase to test if it is possible to buy over the set MAX_ALLOWED_TOTAL cap
+             * One more purcahses with 5.75% + 1 token will be made before the final purchase to test if it is possible to buy over the set MAX_ALLOWED_TOTAL cap
              * 
              * This therefore test for,
              *      1. Stage is shifted when cap is over-bought (in stage 2)
@@ -580,7 +580,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             }).then(function() {
                 return purchaseConfirmSale(instance, accounts[3], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             }).then(function() {
-                // Attempt over-buying over the cap with ether enough to buy 4.25% MAX_SUPPLY + 1 wei
+                // Attempt over-buying over the cap with ether enough to buy 5.75% MAX_SUPPLY + 1 wei
                 return new Promise(function(resolve, reject) {
                     purchaseConfirmSale(instance, accounts[4], _wallet, calEther(maxSupply.mul(STAGE_3_PURCHASE), _weiCostOfTokenStage3).add(1), _weiCostOfTokenStage3).then(function() {
                         reject('ICO sale allow token sale over MAX_ALLOWED_TOTAL');
@@ -618,8 +618,8 @@ contract('CerttifyCrowdsale', function(accounts) {
              * ICO Founders Withdrawable Token Test
              * 
              * Since all token are sold out, founders should be able to withdraw 25% of MAX_SUPPLY, more specifically,
-             *      Phase 1: 10% of MAX_SUPPLY
-             *      Phase 2, 3 & 4: 5% of MAX_SUPPLY
+             *      Phase 1: 13% of MAX_SUPPLY
+             *      Phase 2, 3 & 4: 4% of MAX_SUPPLY
              * Here, we only test if founderWithdrawable in each phase is set correctly
              */
             .then(function() {
@@ -636,16 +636,16 @@ contract('CerttifyCrowdsale', function(accounts) {
             }).then(function(founderWithdrawable) {
                 // Assert founderWithdrawablePhase1
                 var founderWithdrawablePhase1 = founderWithdrawable[0];
-                assert(founderWithdrawablePhase1.cmp(maxSupply.mul(0.1)) == 0, 'Amount of token withdrawable by founders in phase 1 is not identical to 10% of all available token');
+                assert(founderWithdrawablePhase1.cmp(maxSupply.mul(0.13)) == 0, 'Amount of token withdrawable by founders in phase 1 is not identical to 13% of all available token');
                 // Assert founderWithdrawablePhase2
                 var founderWithdrawablePhase2 = founderWithdrawable[1];
-                assert(founderWithdrawablePhase2.cmp(maxSupply.mul(0.05)) == 0, 'Amount of token withdrawable by founders in phase 2 is not identical to 5% of all available token');
+                assert(founderWithdrawablePhase2.cmp(maxSupply.mul(0.04)) == 0, 'Amount of token withdrawable by founders in phase 2 is not identical to 4% of all available token');
                 // Assert founderWithdrawablePhase3
                 var founderWithdrawablePhase3 = founderWithdrawable[2];
-                assert(founderWithdrawablePhase3.cmp(maxSupply.mul(0.05)) == 0, 'Amount of token withdrawable by founders in phase 3 is not identical to 5% of all available token');
+                assert(founderWithdrawablePhase3.cmp(maxSupply.mul(0.04)) == 0, 'Amount of token withdrawable by founders in phase 3 is not identical to 4% of all available token');
                 // Assert founderWithdrawablePhase4
                 var founderWithdrawablePhase4 = founderWithdrawable[3];
-                assert(founderWithdrawablePhase4.cmp(maxSupply.mul(0.05)) == 0, 'Amount of token withdrawable by founders in phase 4 is not identical to 5% of all available token');
+                assert(founderWithdrawablePhase4.cmp(maxSupply.mul(0.04)) == 0, 'Amount of token withdrawable by founders in phase 4 is not identical to 4% of all available token');
                 done();
             }).catch(function(err) {
                 // Some error occured
@@ -726,17 +726,17 @@ contract('CerttifyCrowdsale', function(accounts) {
         var tokenInstance = null;
         var founderWithdrawable = null;
         var maxSupply = web3.toBigNumber('55e25'); // 5.5e8 * 1e18
-        // Buy 10% of token in the whole ICO
-        var tokenBought = maxSupply.mul(web3.toBigNumber(0.1));
-        // Total token distributed = 9% (Bought) + 2% (Bounty) = 11%
+        // Buy 9% of token in the whole ICO
+        var tokenBought = maxSupply.mul(web3.toBigNumber(0.09));
+        // Total token distributed = 9% (Bought) + 3% (Bounty) = 12%
         // Founder should be able to withdraw 12%/3 = 4% of token, since they will own 25% of the 16% supply available
-        var withdrawableTotal = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.02))).div(3);
-        var withdrawablePhase1 = withdrawableTotal.mul(0.4); // 10%
-        var withdrawablePhase2 = withdrawableTotal.mul(0.2); // 5%
-        var withdrawablePhase3 = withdrawableTotal.mul(0.2); // 5%
-        var withdrawablePhase4 = withdrawableTotal.mul(0.2); // 5%
-        // Maximum supply left should be 16% of maxSupply [9% (Bought) + 2% (Bounty) + 4% (Locked)]
-        var maxSupplyLeft = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.02))).add(withdrawableTotal);
+        var withdrawableTotal = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.03))).div(3);
+        var withdrawablePhase1 = withdrawableTotal.mul(0.52); // 13% - 0.25 * 0.52
+        var withdrawablePhase2 = withdrawableTotal.mul(0.16); // 4% - 0.25* 0.16
+        var withdrawablePhase3 = withdrawableTotal.mul(0.16); // 4% - 0.25* 0.16
+        var withdrawablePhase4 = withdrawableTotal.mul(0.16); // 4% - 0.25* 0.16
+        // Maximum supply left should be 16% of maxSupply [9% (Bought) + 3% (Bounty) + 4% (Locked)]
+        var maxSupplyLeft = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.03))).add(withdrawableTotal);
         // Deploy the contract, immediately start stage 3 ICO
         // Gives ourself 12 seconds to buy the token before testing the function
         Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.2), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _owner, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
@@ -783,11 +783,11 @@ contract('CerttifyCrowdsale', function(accounts) {
         }).then(function(_founderWithdrawable) {
             founderWithdrawable = _founderWithdrawable;
             // Assert 4% of total supply is withdrawable
-            // Phase 1: 4% * 40% = 1.6%; Phase 2, 3 & 4: 4% * 20% = 0.8%
-            assert(founderWithdrawable[0].cmp(withdrawablePhase1) == 0, 'Token withdrawable to founders in phase 1 does not equate to 10% of total available supply when maximum cap is not reached');
-            assert(founderWithdrawable[1].cmp(withdrawablePhase2) == 0, 'Token withdrawable to founders in phase 2 does not equate to 5% of total available supply when maximum cap is not reached');
-            assert(founderWithdrawable[2].cmp(withdrawablePhase2) == 0, 'Token withdrawable to founders in phase 3 does not equate to 5% of total available supply when maximum cap is not reached');
-            assert(founderWithdrawable[3].cmp(withdrawablePhase2) == 0, 'Token withdrawable to founders in phase 4 does not equate to 5% of total available supply when maximum cap is not reached');
+            // Phase 1: 4% * 52% = 2.08%; Phase 2, 3 & 4: 4% * 16% = 0.64%
+            assert(founderWithdrawable[0].cmp(withdrawablePhase1) == 0, 'Token withdrawable to founders in phase 1 does not equate to 13% of total available supply when maximum cap is not reached');
+            assert(founderWithdrawable[1].cmp(withdrawablePhase2) == 0, 'Token withdrawable to founders in phase 2 does not equate to 4% of total available supply when maximum cap is not reached');
+            assert(founderWithdrawable[2].cmp(withdrawablePhase2) == 0, 'Token withdrawable to founders in phase 3 does not equate to 4% of total available supply when maximum cap is not reached');
+            assert(founderWithdrawable[3].cmp(withdrawablePhase2) == 0, 'Token withdrawable to founders in phase 4 does not equate to 4% of total available supply when maximum cap is not reached');
             var founderWithdrawableTotal = founderWithdrawable[0].add(founderWithdrawable[1]).add(founderWithdrawable[2]).add(founderWithdrawable[3]);
             assert(founderWithdrawableTotal.cmp(withdrawableTotal) == 0, 'Total token withdrawable to founders does not equate to 25% of total available supply when maximum cap is not reached');
             // Get token address
@@ -810,7 +810,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         }).then(function() {
             done();
         }).catch(function(err) {
-            done('postICO can be called after a successful call');
+            done(err);
         });
     });
 
@@ -884,18 +884,18 @@ contract('CerttifyCrowdsale', function(accounts) {
         var tokenInstance = null;
         var founderWithdrawable = null;
         var maxSupply = web3.toBigNumber('55e25'); // 5.5e8 * 1e18
-        // Buy 10% of token in the whole ICO
-        var tokenBought = maxSupply.mul(web3.toBigNumber(0.1));
-        // Founder should be able to withdraw [10% (Sale) + 2% [Bounty])/3 = 4% of token, since they will own 25% of the 16% supply available
-        var withdrawable = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.02))).div(3);
-        // In phase 1, 40% of withdrawable can be withdrawn
-        var withdrawablePhase1 = withdrawable.mul(web3.toBigNumber('0.4'));
-        // In phase 2, 20% of withdrawable can be withdrawn
-        var withdrawablePhase2 = withdrawable.mul(web3.toBigNumber('0.2'));
-        // In phase 3, 20% of withdrawable can be withdrawn
-        var withdrawablePhase3 = withdrawable.mul(web3.toBigNumber('0.2'));
-        // In phase 4, 20% of withdrawable can be withdrawn
-        var withdrawablePhase4 = withdrawable.mul(web3.toBigNumber('0.2'));
+        // Buy 9% of token in the whole ICO
+        var tokenBought = maxSupply.mul(web3.toBigNumber(0.09));
+        // Founder should be able to withdraw [9% (Sale) + 3% [Bounty])/3 = 4% of token, since they will own 25% of the 16% supply available
+        var withdrawable = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.03))).div(3);
+        // In phase 1, 52% of withdrawable (25% * 0.52 = 13%) can be withdrawn
+        var withdrawablePhase1 = withdrawable.mul(web3.toBigNumber('0.52'));
+        // In phase 2, 16% of withdrawable (25% * 0.16 = 4%) can be withdrawn
+        var withdrawablePhase2 = withdrawable.mul(web3.toBigNumber('0.16'));
+        // In phase 3, 16% of withdrawable (25% * 0.16 = 4%) can be withdrawn
+        var withdrawablePhase3 = withdrawable.mul(web3.toBigNumber('0.16'));
+        // In phase 4, 16% of withdrawable (25% * 0.16 = 4%) can be withdrawn
+        var withdrawablePhase4 = withdrawable.mul(web3.toBigNumber('0.16'));
         // Deploy the contract, immediately start stage 3 ICO
         // Gives ourself 6 seconds to buy the token before testing the function, and allow founder to withdraw unlocked token from all phase after 12 seconds
         Crowdsale.new(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.1), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _owner, getTimestamp(0.2), getTimestamp(0.2), getTimestamp(0.2), getTimestamp(0.2), {
@@ -922,7 +922,7 @@ contract('CerttifyCrowdsale', function(accounts) {
             tokenInstance = CerttifyToken.at(tokenAddress);
             /**
              * Withdraw phase 1 unlocked token
-             * 1.2% (3% * 0.4) of token should be withdrawn by founders so far
+             * 2.08% (4% * 0.52) of token should be withdrawn by founders so far
              */
             var deployerBalance = withdrawablePhase1;
             var contractBalance = withdrawable.sub(deployerBalance);
@@ -930,7 +930,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         }).then(function() {
             /**
              * Withdraw phase 2 unlocked token
-             * 1.8% (3% * 0.6) of token should be withdrawn by founders so far
+             * 2.72% (4% * 0.68) of token should be withdrawn by founders so far
              */
             var deployerBalance = withdrawablePhase1.add(withdrawablePhase2);
             var contractBalance = withdrawable.sub(deployerBalance);
@@ -938,7 +938,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         }).then(function() {
             /**
              * Withdraw phase 3 unlocked token
-             * 2.4% (3% * 0.8) of token should be withdrawn by founders so far
+             * 3.36% (4% * 0.84) of token should be withdrawn by founders so far
              */
             var deployerBalance = withdrawablePhase1.add(withdrawablePhase2).add(withdrawablePhase3);
             var contractBalance = withdrawable.sub(deployerBalance);
@@ -946,7 +946,7 @@ contract('CerttifyCrowdsale', function(accounts) {
         }).then(function() {
             /**
              * Withdraw phase 4 unlocked token
-             * 3% of token should be withdrawn by founders
+             * 4% of token should be withdrawn by founders
              */
             var deployerBalance = withdrawable;
             var contractBalance = web3.toBigNumber(0);
@@ -965,18 +965,18 @@ contract('CerttifyCrowdsale', function(accounts) {
         var instance = null;
         var tokenInstance = null;
         var maxSupply = web3.toBigNumber('55e25'); // 5.5e8 * 1e18
-        // Buy 10% of token in the whole ICO
-        var tokenBought = maxSupply.mul(web3.toBigNumber(0.1));
-        // Founder should be able to withdraw [10% (Sale) + 2% [Bounty])/3 = 4% of token, since they will own 25% of the 16% supply available
-        var withdrawable = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.02))).div(3);
-        // In phase 1, 40% of withdrawable can be withdrawn
-        var withdrawablePhase1 = withdrawable.mul(web3.toBigNumber('0.4'));
-        // In phase 2, 20% of withdrawable can be withdrawn
-        var withdrawablePhase2 = withdrawable.mul(web3.toBigNumber('0.2'));
-        // In phase 3, 20% of withdrawable can be withdrawn
-        var withdrawablePhase3 = withdrawable.mul(web3.toBigNumber('0.2'));
-        // In phase 4, 20% of withdrawable can be withdrawn
-        var withdrawablePhase4 = withdrawable.mul(web3.toBigNumber('0.2'));
+        // Buy 9% of token in the whole ICO
+        var tokenBought = maxSupply.mul(web3.toBigNumber(0.09));
+        // Founder should be able to withdraw [9% (Sale) + 3% [Bounty])/3 = 4% of token, since they will own 25% of the 16% supply available
+        var withdrawable = tokenBought.add(maxSupply.mul(web3.toBigNumber(0.03))).div(3);
+        // In phase 1, 52% of withdrawable (25% * 0.52 = 13%) can be withdrawn
+        var withdrawablePhase1 = withdrawable.mul(web3.toBigNumber('0.52'));
+        // In phase 2, 16% of withdrawable (25% * 0.16 = 4%) can be withdrawn
+        var withdrawablePhase2 = withdrawable.mul(web3.toBigNumber('0.16'));
+        // In phase 3, 16% of withdrawable (25% * 0.16 = 4%) can be withdrawn
+        var withdrawablePhase3 = withdrawable.mul(web3.toBigNumber('0.16'));
+        // In phase 4, 16% of withdrawable (25% * 0.16 = 4%) can be withdrawn
+        var withdrawablePhase4 = withdrawable.mul(web3.toBigNumber('0.16'));
         // Deploy the contract, immediately start stage 3 ICO
         // Gives ourself 6 seconds to buy the token before testing the function, and allow founder to withdraw unlocked token
         // Token are unlocked with the following schedule:
