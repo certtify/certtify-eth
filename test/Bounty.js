@@ -151,9 +151,23 @@ contract('Bounty', function(accounts) {
         });
     });
 
+    it('Bounty cannot be withdrawn before unlock', function(done) {
+        bounty.setBounties(addresses, amounts, {
+            from: accounts[0]
+        }).then(function() {
+            return assertRevert(bounty.withdrawBounty({ from: addresses[0] }));
+        }).then(function() {
+            done();
+        }).catch(function(err) {
+            done(err);
+        });
+    });
+
     it('Withdraw the bounties set', function(done) {
         bounty.setBounties(addresses, amounts, {
             from: accounts[0]
+        }).then(function() {
+            return bounty.enableWithdrawl({ from: accounts[0] });
         }).then(function() {
             var promises = [];
             for (var i=0; i<addresses.length; i++) {
@@ -177,6 +191,8 @@ contract('Bounty', function(accounts) {
     it('Withdraw the bounties set via fallback function', function(done) {
         bounty.setBounties(addresses, amounts, {
             from: accounts[0]
+        }).then(function() {
+            return bounty.enableWithdrawl({ from: accounts[0] });
         }).then(function() {
             var promises = [];
             for (var i=0; i<addresses.length; i++) {
@@ -210,6 +226,8 @@ contract('Bounty', function(accounts) {
     it('Cannot withdraw token without bounty set', function(done) {
         bounty.setBounties([ accounts[0], accounts[1] ], [ web3.toBigNumber('1e+20'), web3.toBigNumber('2e+20')], {
             from: accounts[0]
+        }).then(function() {
+            return bounty.enableWithdrawl({ from: accounts[0] });
         }).then(function() {
             return assertRevert(bounty.withdrawBounty({ from: addresses[2] }));
         }).then(function() {

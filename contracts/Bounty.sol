@@ -15,6 +15,8 @@ contract Bounty is Ownable {
     CerttifyToken public token;
     // Mapping for the amount of token waiting for withdrawal
     mapping(address => uint256) public bounties;
+    // Whether withdrawl is already enabled
+    bool public withdrawlEnabled = false;
 
     /**
      * @notice Event for setting the bounty for an address
@@ -54,9 +56,18 @@ contract Bounty is Ownable {
     }
 
     /**
+     * @notice Enable withdrawl of bounty
+     */
+    function enableWithdrawl() external onlyOwner {
+        withdrawlEnabled = true;
+    }
+
+    /**
      * @notice Withdraw the bounty rewarded to msg.sender
      */
     function withdrawBounty() public {
+        // Require withdrawl to be enabled
+        require(withdrawlEnabled);
         // Require the withdrawable bounty for msg.sender to be greater than 0
         require(bounties[msg.sender] > 0);
         // Temporarily store the bounty withdrawable for msg.sender
