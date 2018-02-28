@@ -195,4 +195,29 @@ contract('CerttifyToken', function(accounts) {
         });
     });
 
+    it('Issue certificate with 0 CTF burnt', function(done) {
+        var tokenBurnt = toDecimal(0);
+        var certificate = buildCert('A'.repeat(100));
+        token.unlock().then(function() {
+            // Issue a test certificate
+            return token.issueCert(tokenBurnt, certificate);
+        }).then(function() {
+            // Test CertIssue Log
+            return new Promise(function(resolve, reject) {
+                token.IssueCert().get(function(err, logs) {
+                    if (err) { reject(err) }
+                    var event = logs[0].args;
+                    assert.equal(event.certIssuer, accounts[0], 'Certificate issuer mismatched');
+                    assert(tokenBurnt.cmp(event.value) == 0, 'Number of token burnt mismatched');
+                    assert.equal(event.cert, certificate, 'Certificate mismatched');
+                    resolve();
+                });
+            });
+        }).then(function() {
+            done();
+        }).catch(function(err) {
+            done(err);
+        });
+    });
+
 });

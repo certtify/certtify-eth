@@ -105,8 +105,11 @@ contract CerttifyToken is StandardToken {
      * @param _cert Certificate
      */
     function issueCert(uint256 _value, bytes _cert) external afterLockup() {
-        // Burn the token
-        burn(_value, "");
+        // Burn the token if the issuer wants to do so
+        // This is to leave flexibility in the future when 0 CTF certificiate is acceptable by the protocol
+        if (_value > 0) { 
+            burn(_value, "");
+        }
         // Log IssueCert event
         IssueCert(keccak256(block.number, msg.sender, _value, _cert), msg.sender, _value, _cert);
     }
