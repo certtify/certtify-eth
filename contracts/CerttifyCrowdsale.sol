@@ -128,12 +128,13 @@ contract CerttifyCrowdsale is Ownable {
      * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
      * @param _wallet Address for collecting the raised fund
      * @param _owner Address of the owner of this contract
+     * @param _bountyAdmin Address of the bounty admin of the created Bounty contract
      * @param _founderTokenUnlockPhase1 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 1
      * @param _founderTokenUnlockPhase2 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 2
      * @param _founderTokenUnlockPhase3 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 3
      * @param _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
      */
-    function CerttifyCrowdsale(uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, address _wallet, address _owner, uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4) Ownable(_owner) public {
+    function CerttifyCrowdsale(uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, address _wallet, address _owner, address _bountyAdmin, uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4) Ownable(_owner) public {
         // Basic checking on parameters: All are set somewhat reasonably, but are ease enough for automated test
         require(_timestampStage1 > 0);
         require(_timestampStage2 >= _timestampStage1);
@@ -151,7 +152,7 @@ contract CerttifyCrowdsale is Ownable {
         // Create the Certtify token for sale
         token = createTokenContract();
         // Instantiate BountyDistribution contract, and grant it the token reserved for Bounty programme
-        bounty = createBountyContract();
+        bounty = createBountyContract(_bountyAdmin);
         token.transfer(bounty, MAX_ALLOWED_BOUNTY);
         // Pre-sale can be done immediately after contract deployment
         startTimeStage0 = now;
@@ -183,10 +184,11 @@ contract CerttifyCrowdsale is Ownable {
 
     /** 
      * @notice Creates the Bounty distributor contract
+     * @param admin Address of the bounty admin
      * @return Bounty Deployed bounty contract
      */
-    function createBountyContract() internal returns (Bounty) {
-        return new Bounty(token, owner);
+    function createBountyContract(address admin) internal returns (Bounty) {
+        return new Bounty(token, admin);
     }
 
     /** 

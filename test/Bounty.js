@@ -71,13 +71,14 @@ contract('Bounty', function(accounts) {
         const _weiCostOfTokenStage2 = web3.toBigNumber('12000000000000');
         const _weiCostOfTokenStage3 = web3.toBigNumber('15000000000000');
         const _wallet = '0x6c2aafbb393d67e7057c34e7c8389e864928361b'; // Just a random address for testing
-        const _owner = addresses[0];
+        const _owner = accounts[0];
+        const _bountyAdmin = accounts[1];
         const _founderTokenUnlockPhase1 = getTimestamp(50);
         const _founderTokenUnlockPhase2 = getTimestamp(60);
         const _founderTokenUnlockPhase3 = getTimestamp(70);
         const _founderTokenUnlockPhase4 = getTimestamp(80);
         var crowdsaleInstance = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _owner, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _owner, _bountyAdmin, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
             from: accounts[1]
         }).then(function(_instance) {
             crowdsaleInstance = _instance;
@@ -97,9 +98,18 @@ contract('Bounty', function(accounts) {
         });
     });
 
+    it('Bounty admin is set successfully', function(done) {
+        bounty.owner.call().then(function(admin) {
+            assert(accounts[1] == admin, 'Bounty admin is not set correctly');
+            done();
+        }).catch(function(err) {
+            done(err);
+        });
+    });
+
     it('Set bounties for addresses', function(done) {
         bounty.setBounties(addresses, amounts, {
-            from: accounts[0]
+            from: accounts[1]
         }).then(function() {
             var promises = [];
             for (var i=0; i<addresses.length; i++) {
@@ -118,9 +128,9 @@ contract('Bounty', function(accounts) {
         const addresses_update = [ accounts[0], accounts[1] ];
         const amounts_update = [ web3.toBigNumber('1e+23'), web3.toBigNumber('2e+23') ];
         bounty.setBounties(addresses, amounts, {
-            from: accounts[0]
+            from: accounts[1]
         }).then(function() {
-            return bounty.setBounties(addresses_update, amounts_update, { from: accounts[0] });
+            return bounty.setBounties(addresses_update, amounts_update, { from: accounts[1] });
         }).then(function(receipt) {
             var promises = [];
             for (var i=0; i<addresses_update.length; i++) {
@@ -137,7 +147,7 @@ contract('Bounty', function(accounts) {
 
     it('Non-admin cannot set bounty', function(done) {
         assertRevert(bounty.setBounties(addresses, amounts, {
-            from: accounts[1]
+            from: accounts[0]
         })).then(function() {
             done();
         });
@@ -145,7 +155,7 @@ contract('Bounty', function(accounts) {
 
     it('Cannot set bounty with mismatched length of addresses and amounts array', function(done) {
         assertRevert(bounty.setBounties(addresses, [ web3.toBigNumber('1e+22') ], {
-            from: accounts[0]
+            from: accounts[1]
         })).then(function() {
             done();
         });
@@ -153,9 +163,9 @@ contract('Bounty', function(accounts) {
 
     it('Bounty cannot be withdrawn before unlock', function(done) {
         bounty.setBounties(addresses, amounts, {
-            from: accounts[0]
+            from: accounts[1]
         }).then(function() {
-            return assertRevert(bounty.withdrawBounty({ from: addresses[0] }));
+            return assertRevert(bounty.withdrawBounty({ from: accounts[0] }));
         }).then(function() {
             done();
         }).catch(function(err) {
@@ -165,9 +175,9 @@ contract('Bounty', function(accounts) {
 
     it('Withdraw the bounties set', function(done) {
         bounty.setBounties(addresses, amounts, {
-            from: accounts[0]
+            from: accounts[1]
         }).then(function() {
-            return bounty.enableWithdrawl({ from: accounts[0] });
+            return bounty.enableWithdrawl({ from: accounts[1] });
         }).then(function() {
             var promises = [];
             for (var i=0; i<addresses.length; i++) {
@@ -190,9 +200,9 @@ contract('Bounty', function(accounts) {
 
     it('Withdraw the bounties set via fallback function', function(done) {
         bounty.setBounties(addresses, amounts, {
-            from: accounts[0]
+            from: accounts[1]
         }).then(function() {
-            return bounty.enableWithdrawl({ from: accounts[0] });
+            return bounty.enableWithdrawl({ from: accounts[1] });
         }).then(function() {
             var promises = [];
             for (var i=0; i<addresses.length; i++) {
@@ -225,9 +235,9 @@ contract('Bounty', function(accounts) {
 
     it('Cannot withdraw token without bounty set', function(done) {
         bounty.setBounties([ accounts[0], accounts[1] ], [ web3.toBigNumber('1e+20'), web3.toBigNumber('2e+20')], {
-            from: accounts[0]
+            from: accounts[1]
         }).then(function() {
-            return bounty.enableWithdrawl({ from: accounts[0] });
+            return bounty.enableWithdrawl({ from: accounts[1] });
         }).then(function() {
             return assertRevert(bounty.withdrawBounty({ from: addresses[2] }));
         }).then(function() {
