@@ -1,9 +1,9 @@
 pragma solidity 0.4.18;
 
-import './CerttifyToken.sol';
-import './Bounty.sol';
-import './Ownable.sol';
-import './math/SafeMath.sol';
+import "./CerttifyToken.sol";
+import "./Bounty.sol";
+import "./Ownable.sol";
+import "./math/SafeMath.sol";
 
 /**
  * @title Certtify Token Crowdsale Contract
@@ -21,10 +21,12 @@ contract CerttifyCrowdsale is Ownable {
     // Bounty contract
     Bounty public bounty;
 
-    // Start timestamp of pre-sale
-    uint256 public startTimeStage0;
+    // Boolean storing whether the ICO specification has been confirmed
+    bool public icoSpecConfirmed = false;
+
     // Start timestamp of ICO phase 1
-    uint256 public startTimeStage1;
+    // Initialized to be 31/12/2099 to allow pre-sale before we finalize the ICO specification
+    uint256 public startTimeStage1 = 4102444799;
     // Start timestamp of ICO phase 2
     uint256 public startTimeStage2;
     // Start timestamp of ICO phase 3
@@ -49,14 +51,14 @@ contract CerttifyCrowdsale is Ownable {
     uint256 public constant MAX_SUPPLY_DECIMAL = 550000000 * (10 ** DECIMALS);
     // Maximum CTF token available in bounty, equates to 3% of total supply
     uint256 public constant MAX_ALLOWED_BOUNTY = 16500000 * (10 ** DECIMALS);
-    // Maximum CTF token available in pre-sale, equates to 5% of total supply
-    uint256 public constant MAX_ALLOWED_PRE_SALE = 27500000 * (10 ** DECIMALS);
-    // Maximum CTF token available in ICO phase 1, equates to 20% of total supply
-    uint256 public constant MAX_ALLOWED_STAGE_1 = 110000000 * (10 ** DECIMALS);
-    // Maximum CTF token available in ICO phase 2, equates to 22% of total supply
-    uint256 public constant MAX_ALLOWED_STAGE_2 = 121000000 * (10 ** DECIMALS);
-    // Maximum CTF token available in ICO phase 3, equates to 25% of total supply
-    uint256 public constant MAX_ALLOWED_STAGE_3 = 137500000 * (10 ** DECIMALS);
+    // Maximum CTF token available in pre-sale, equates to 35% of total supply
+    uint256 public constant MAX_ALLOWED_PRE_SALE = 192500000 * (10 ** DECIMALS);
+    // Maximum CTF token available in ICO phase 1, equates to 15% of total supply
+    uint256 public constant MAX_ALLOWED_STAGE_1 = 82500000 * (10 ** DECIMALS);
+    // Maximum CTF token available in ICO phase 2, equates to 15% of total supply
+    uint256 public constant MAX_ALLOWED_STAGE_2 = 82500000 * (10 ** DECIMALS);
+    // Maximum CTF token available in ICO phase 3, equates to 10% of total supply
+    uint256 public constant MAX_ALLOWED_STAGE_3 = 55000000 * (10 ** DECIMALS);
     // Maximum CTF token available BY ICO phase 1, equates to 25% of total supply
     uint256 public MAX_ALLOWED_BY_STAGE_1 = MAX_ALLOWED_PRE_SALE.add(MAX_ALLOWED_STAGE_1);
     // Maximum CTF token available BY ICO phase 2, equates to 47% of total supply
@@ -117,61 +119,40 @@ contract CerttifyCrowdsale is Ownable {
     }
 
     /**
+     * @notice Allow execution only before ICO specification is confirmed
+     */
+    modifier onlyBeforeSpecConfirmed() {
+        require(!icoSpecConfirmed);
+        _;
+    }
+
+    /**
+     * @notice Allow execution only after ICO specification is confirmed
+     */
+    modifier onlyAfterSpecConfirmed() {
+        require(icoSpecConfirmed);
+        _;
+    }
+
+    /**
      * @notice Construct the crowdsale contact
      *
-     * @param _timestampStage1 Timestamp in seconds since Unix epoch for stage 1 ICO to begin
-     * @param _timestampStage2 Timestamp in seconds since Unix epoch for stage 2 ICO to begin
-     * @param _timestampStage3 Timestamp in seconds since Unix epoch for stage 3 ICO to begin
-     * @param _timestampEndTime Timestamp in seconds since Unix epoch for ending the ICO
-     * @param _weiCostOfTokenStage1 Cost of each Certtify token, measured in wei, in stage 1 ICO
-     * @param _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
-     * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
      * @param _wallet Address for collecting the raised fund
      * @param _owner Address of the owner of this contract
      * @param _bountyAdmin Address of the bounty admin of the created Bounty contract
-     * @param _founderTokenUnlockPhase1 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 1
-     * @param _founderTokenUnlockPhase2 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 2
-     * @param _founderTokenUnlockPhase3 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 3
-     * @param _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
      */
-    function CerttifyCrowdsale(uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, address _wallet, address _owner, address _bountyAdmin, uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4) Ownable(_owner) public {
+    function CerttifyCrowdsale(address _wallet, address _owner, address _bountyAdmin) Ownable(_owner) public {
         // Basic checking on parameters: All are set somewhat reasonably, but are ease enough for automated test
-        require(_timestampStage1 > 0);
-        require(_timestampStage2 >= _timestampStage1);
-        require(_timestampStage3 >= _timestampStage2);
-        require(_timestampEndTime >= _timestampStage3);
-        require(_weiCostOfTokenStage1 > 0);
-        require(_weiCostOfTokenStage2 >= _weiCostOfTokenStage1);
-        require(_weiCostOfTokenStage3 >= _weiCostOfTokenStage2);
         require(_wallet != address(0));
         require(_owner != address(0));
-        require(_founderTokenUnlockPhase1 > 0);
-        require(_founderTokenUnlockPhase2 >= _founderTokenUnlockPhase1);
-        require(_founderTokenUnlockPhase3 >= _founderTokenUnlockPhase2);
-        require(_founderTokenUnlockPhase4 >= _founderTokenUnlockPhase3);
+        require(_bountyAdmin != address(0));
         // Create the Certtify token for sale
         token = createTokenContract();
         // Instantiate BountyDistribution contract, and grant it the token reserved for Bounty programme
         bounty = createBountyContract(_bountyAdmin);
         token.transfer(bounty, MAX_ALLOWED_BOUNTY);
-        // Pre-sale can be done immediately after contract deployment
-        startTimeStage0 = now;
-        // Set the starting time for each stage
-        startTimeStage1 = _timestampStage1;
-        startTimeStage2 = _timestampStage2;
-        startTimeStage3 = _timestampStage3;
-        endTime = _timestampEndTime;
-        // Calculate the rate for each stage
-        rateStage1 = _weiCostOfTokenStage1;
-        rateStage2 = _weiCostOfTokenStage2;
-        rateStage3 = _weiCostOfTokenStage3;
         // Set Ethereum collection address
         wallet = _wallet;
-        // Set the time when founders' token are unlocked
-        founderTokenUnlockPhase1 = _founderTokenUnlockPhase1;
-        founderTokenUnlockPhase2 = _founderTokenUnlockPhase2;
-        founderTokenUnlockPhase3 = _founderTokenUnlockPhase3;
-        founderTokenUnlockPhase4 = _founderTokenUnlockPhase4;
     }
 
     /** 
@@ -191,6 +172,57 @@ contract CerttifyCrowdsale is Ownable {
         return new Bounty(token, admin);
     }
 
+    /**
+     * @notice Set the specification for the ICO token sale
+     *
+     * @param _timestampStage1 Timestamp in seconds since Unix epoch for stage 1 ICO to begin
+     * @param _timestampStage2 Timestamp in seconds since Unix epoch for stage 2 ICO to begin
+     * @param _timestampStage3 Timestamp in seconds since Unix epoch for stage 3 ICO to begin
+     * @param _timestampEndTime Timestamp in seconds since Unix epoch for ending the ICO
+     * @param _weiCostOfTokenStage1 Cost of each Certtify token, measured in wei, in stage 1 ICO
+     * @param _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
+     * @param _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
+     * @param _founderTokenUnlockPhase1 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 1
+     * @param _founderTokenUnlockPhase2 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 2
+     * @param _founderTokenUnlockPhase3 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 3
+     * @param _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
+     */
+    function setICOSpec(uint256 _timestampStage1, uint256 _timestampStage2, uint256 _timestampStage3, uint256 _timestampEndTime, uint256 _weiCostOfTokenStage1, uint256 _weiCostOfTokenStage2, uint256 _weiCostOfTokenStage3, uint256 _founderTokenUnlockPhase1, uint256 _founderTokenUnlockPhase2, uint256 _founderTokenUnlockPhase3, uint256 _founderTokenUnlockPhase4) external onlyBeforeSpecConfirmed() onlyOwner {
+        // Basic checking on parameters: All are set somewhat reasonably, but are ease enough for automated test
+        require(_timestampStage1 > 0);
+        require(_timestampStage2 >= _timestampStage1);
+        require(_timestampStage3 >= _timestampStage2);
+        require(_timestampEndTime >= _timestampStage3);
+        require(_weiCostOfTokenStage1 > 0);
+        require(_weiCostOfTokenStage2 >= _weiCostOfTokenStage1);
+        require(_weiCostOfTokenStage3 >= _weiCostOfTokenStage2);
+        require(_founderTokenUnlockPhase1 > 0);
+        require(_founderTokenUnlockPhase2 >= _founderTokenUnlockPhase1);
+        require(_founderTokenUnlockPhase3 >= _founderTokenUnlockPhase2);
+        require(_founderTokenUnlockPhase4 >= _founderTokenUnlockPhase3);
+        // Set the starting time for each stage
+        startTimeStage1 = _timestampStage1;
+        startTimeStage2 = _timestampStage2;
+        startTimeStage3 = _timestampStage3;
+        endTime = _timestampEndTime;
+        // Set the rate for each stage
+        rateStage1 = _weiCostOfTokenStage1;
+        rateStage2 = _weiCostOfTokenStage2;
+        rateStage3 = _weiCostOfTokenStage3;
+        // Set the time when founders' token are unlocked
+        founderTokenUnlockPhase1 = _founderTokenUnlockPhase1;
+        founderTokenUnlockPhase2 = _founderTokenUnlockPhase2;
+        founderTokenUnlockPhase3 = _founderTokenUnlockPhase3;
+        founderTokenUnlockPhase4 = _founderTokenUnlockPhase4;
+    }
+
+    /**
+     * @notice Confirm ICO specification
+     */
+    function confirmICOSpec() external onlyBeforeSpecConfirmed() onlyOwner {
+        icoSpecConfirmed = true;
+    }
+
     /** 
      * @notice Fallback function can be used to buy tokens
      */
@@ -202,7 +234,7 @@ contract CerttifyCrowdsale is Ownable {
      * @notice Function for handling buy token request
      * @param beneficiary Address of beneficiary
      */
-    function buyTokens(address beneficiary) public payable {
+    function buyTokens(address beneficiary) public payable onlyAfterSpecConfirmed() {
         // Checking if purchase is valid
         require(beneficiary != address(0));
         require(validPurchase());
@@ -248,21 +280,21 @@ contract CerttifyCrowdsale is Ownable {
      *      2. Burn all remaining tokens
      *      3. Remove the lock up on transfer() and transferFrom() on token contract
      */
-    function postICO() public onlyOwner {
+    function postICO() public onlyAfterSpecConfirmed() onlyOwner {
         // Check if ICO has ended
         require(hasEnded());
         // Check if this function is already called
         require(!icoEnded);
         // Calculate the amount of token founders will be able to withdraw
-        // A total of 1/3 of all token sold, or 25% of all available token including these token, is withdrawable
-        uint256 founderWithdrawableTotal = tokenSold.add(MAX_ALLOWED_BOUNTY).div(3);
-        // 13% of total supply is withdrawable in phase 1 unlock (25% * 13/25 = 13%)
+        // A total of 22/78 of all token sold (including bounty and ICO sale), or 22% of all available token including these token, is withdrawable
+        uint256 founderWithdrawableTotal = tokenSold.add(MAX_ALLOWED_BOUNTY).mul(22).div(78);
+        // 10% of total supply is withdrawable in phase 1 unlock (22% * 10/22 = 10%)
         // Used for supporting early adopters, and for advisors
-        founderWithdrawablePhase1 = founderWithdrawableTotal.mul(13).div(25);
+        founderWithdrawablePhase1 = founderWithdrawableTotal.mul(10).div(22);
         // 4% of total supply is withdrawable in phase 2, 3 and 4 unlock, each with 4% of total supply
-        founderWithdrawablePhase2 = founderWithdrawableTotal.mul(4).div(25);
-        founderWithdrawablePhase3 = founderWithdrawableTotal.mul(4).div(25);
-        founderWithdrawablePhase4 = founderWithdrawableTotal.mul(4).div(25);
+        founderWithdrawablePhase2 = founderWithdrawableTotal.mul(4).div(22);
+        founderWithdrawablePhase3 = founderWithdrawableTotal.mul(4).div(22);
+        founderWithdrawablePhase4 = founderWithdrawableTotal.mul(4).div(22);
         // End the ICO
         icoEnded = true;
         // Burn the remaining token if any
@@ -277,7 +309,7 @@ contract CerttifyCrowdsale is Ownable {
     /**
      * @notice Allow founders to withdraw their token after lockup period
      */
-    function founderWithdraw() public onlyOwner {
+    function founderWithdraw() public onlyAfterSpecConfirmed() onlyOwner {
         // Check if postICO is already called, as it set the founderWithdrawable variable
         require(icoEnded);
         // If phase 4 has passed, all token is already withdrawn and there are no meaning going forward
