@@ -1,7 +1,7 @@
 pragma solidity 0.4.18;
 
-import './CerttifyToken.sol';
-import './Ownable.sol';
+import "./CerttifyToken.sol";
+import "./Ownable.sol";
 
 /**
  * @title Certtify Token Bounty Contract
