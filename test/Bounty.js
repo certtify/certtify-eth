@@ -63,6 +63,7 @@ contract('Bounty', function(accounts) {
     ];
 
     beforeEach(function(done) {
+
         const _timestampStage1 = getTimestamp(0);
         const _timestampStage2 = getTimestamp(0);
         const _timestampStage3 = getTimestamp(0);
@@ -77,11 +78,47 @@ contract('Bounty', function(accounts) {
         const _founderTokenUnlockPhase2 = getTimestamp(60);
         const _founderTokenUnlockPhase3 = getTimestamp(70);
         const _founderTokenUnlockPhase4 = getTimestamp(80);
+
+        /**
+         * Confirm ICO Specification
+         * 
+         * @param {*} instance Crowdsale contract instance
+         * @param {number} _timestampStage1 Timestamp in seconds since Unix epoch for stage 1 ICO to begin
+         * @param {number} _timestampStage2 Timestamp in seconds since Unix epoch for stage 2 ICO to begin
+         * @param {number} _timestampStage3 Timestamp in seconds since Unix epoch for stage 3 ICO to begin
+         * @param {number} _timestampEndTime Timestamp in seconds since Unix epoch for ending the ICO
+         * @param {number} _weiCostOfTokenStage1 Cost of each Certtify token, measured in wei, in stage 1 ICO
+         * @param {number} _weiCostOfTokenStage2 Cost of each Certtify token, measured in wei, in stage 2 ICO
+         * @param {number} _weiCostOfTokenStage3 Cost of each Certtify token, measured in wei, in stage 3 ICO
+         * @param {number} _founderTokenUnlockPhase1 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 1
+         * @param {number} _founderTokenUnlockPhase2 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 2
+         * @param {number} _founderTokenUnlockPhase3 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 3
+         * @param {number} _founderTokenUnlockPhase4 Timestamp in seconds since Unix epoch for unlocking founders' token in phase 4
+         */
+        var confirmSpec = function(instance, _timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4) {
+            return new Promise(function(resolve, reject) {
+                instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }).then(function() {
+                    return instance.confirmICOSpec({
+                        from: accounts[0]
+                    });
+                }).then(function() {
+                    resolve();
+                }).catch(function(err) {
+                    reject(err);
+                });
+            })
+        }
+
         var crowdsaleInstance = null;
-        Crowdsale.new(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _wallet, _owner, _bountyAdmin, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+        Crowdsale.new(_wallet, _owner, _bountyAdmin, {
             from: accounts[1]
         }).then(function(_instance) {
             crowdsaleInstance = _instance;
+            // Set and confirm specification
+            return confirmSpec(crowdsaleInstance, _timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4);
+        }).then(function() {
             // Call postICO
             return crowdsaleInstance.postICO({
                 from: accounts[0]
