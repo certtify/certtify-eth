@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.21;
 
 import "./CerttifyToken.sol";
 import "./Ownable.sol";
@@ -51,7 +51,7 @@ contract Bounty is Ownable {
         // Set the bounty for each address
         for (uint256 i = 0; i < beneficiaries.length; i++) {
             bounties[beneficiaries[i]] = amounts[i];
-            BountySet(beneficiaries[i], amounts[i]);
+            emit BountySet(beneficiaries[i], amounts[i]);
         }
     }
 
@@ -75,7 +75,7 @@ contract Bounty is Ownable {
         // Set bounties to 0
         bounties[msg.sender] = 0;
         // Log the withdraw event
-        BountyWithdraw(msg.sender, bountyWithdrawn);
+        emit BountyWithdraw(msg.sender, bountyWithdrawn);
         // Transfer the token
         token.transfer(msg.sender, bountyWithdrawn);
     }

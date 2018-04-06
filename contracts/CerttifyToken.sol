@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.21;
 
 import "./zeppelin-solidity/StandardToken.sol";
 
@@ -96,7 +96,7 @@ contract CerttifyToken is StandardToken {
         totalSupply = totalSupply.sub(_value);
         balances[burner] = balances[burner].sub(_value);
         // Log Burn event
-        Burn(burner, _value, _message);
+        emit Burn(burner, _value, _message);
     }
 
     /**
@@ -111,7 +111,7 @@ contract CerttifyToken is StandardToken {
             burn(_value, "");
         }
         // Log IssueCert event
-        IssueCert(keccak256(block.number, msg.sender, _value, _cert), msg.sender, _value, _cert);
+        emit IssueCert(keccak256(block.number, msg.sender, _value, _cert), msg.sender, _value, _cert);
     }
 
 }

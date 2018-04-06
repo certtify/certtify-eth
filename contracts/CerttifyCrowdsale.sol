@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.21;
 
 import "./CerttifyToken.sol";
 import "./Bounty.sol";
@@ -242,7 +242,7 @@ contract CerttifyCrowdsale is Ownable {
         // Rewarding buyer the token
         token.transfer(beneficiary, tokens);
         // Log the purchase event
-        TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+        emit TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
     }
 
     /**
@@ -261,7 +261,7 @@ contract CerttifyCrowdsale is Ownable {
         // Transfer token to buyer
         token.transfer(beneficiary, tokens);
         // Log the purchase event
-        TokenPurchase(beneficiary, beneficiary, 0, tokens);
+        emit TokenPurchase(beneficiary, beneficiary, 0, tokens);
     }
     
     /**
