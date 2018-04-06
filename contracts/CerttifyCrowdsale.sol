@@ -110,15 +110,6 @@ contract CerttifyCrowdsale is Ownable {
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     /**
-     * @notice Fix for ERC20 short address attack
-     * @param size Expected data size
-     */
-    modifier onlyPayloadSize(uint256 size) {
-        require(msg.data.length >= size + 4);
-        _;
-    }
-
-    /**
      * @notice Allow execution only before ICO specification is confirmed
      */
     modifier onlyBeforeSpecConfirmed() {
@@ -259,7 +250,7 @@ contract CerttifyCrowdsale is Ownable {
      * @param beneficiary Address of beneficiary
      * @param tokens Number of tokens to be sent
      */
-    function buyTokensPreSale(address beneficiary, uint256 tokens) public onlyPayloadSize(2 * 32) onlyOwner {
+    function buyTokensPreSale(address beneficiary, uint256 tokens) public onlyOwner {
         // Checking if the pre-sale is valid
         require(beneficiary != address(0));
         require(tokens > 0);
