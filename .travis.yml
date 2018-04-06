@@ -4,11 +4,10 @@ language: node_js
 node_js:
   - '7'
 install:
-  - npm install -g truffle
-  - npm install -g ganache-cli
-  - npm install -g ethereumjs-testrpc
+  - npm install -g truffle@4.1.5
+  - npm install -g ganache-cli@6.1.0
   - npm install
 script:
   - npm test
 after_script:
-  - npm run coverage:net & npm run coverage && cat coverage/lcov.info | coveralls
+  - npm run coverage && cat coverage/lcov.info | coveralls
