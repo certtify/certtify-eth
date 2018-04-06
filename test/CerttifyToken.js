@@ -2,12 +2,24 @@
 var CerttifyToken = artifacts.require("CerttifyToken");
 
 /**
- * Assert the error contains revert
- * @param {*} error 
+ * Assert a promise will returns 'revert' on EVM upon execution
+ * @param {Promise<any>} promise Operation that should be reverted
  */
-var assertRevert = function(error) {
-	assert.isAbove(error.message.search('revert'), -1, 'Error containing "revert" must be returned');
-};
+function assertRevert(promise) {
+    return new Promise(function(resolve, reject) {
+        promise.then(function() {
+            reject('Error containing "revert" must be returned');
+        }).catch(function(err) {
+            if (err.message.search('revert') == -1) {
+                // Revert not triggered
+                reject('Error containing "revert" must be returned');
+            }
+            else {
+                resolve();
+            }
+        })
+    })
+}
 /**
  * Convert number of token into its decimal representation
  * @param {number} raw Number of token
@@ -70,12 +82,11 @@ contract('CerttifyToken', function(accounts) {
             // Assert balance to be 100
             assert(balance1.cmp(toDecimal(100)) == 0, 'Transaction from deployer during lock up period failed');
             // Attempt to transfer from accounts[1]
-            return token.transfer(accounts[2], toDecimal(100), { from: accounts[1] });
+            return assertRevert(token.transfer(accounts[2], toDecimal(100), { from: accounts[1] }));
         }).then(function() {
-            done('transfer is not locked during lock up period');
-        }).catch(function(err) {
-            assertRevert(err); // Assert revert on EVM
             done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
@@ -87,12 +98,11 @@ contract('CerttifyToken', function(accounts) {
             return token.approve(accounts[2], toDecimal(100), { from: accounts[1] });
         }).then(function() {
             // transferFrom should fail in lock up period if sent by address other than deployer
-            return token.transferFrom(accounts[1], accounts[3], toDecimal(100), { from: accounts[2] });
+            return assertRevert(token.transferFrom(accounts[1], accounts[3], toDecimal(100), { from: accounts[2] }));
         }).then(function() {
-            done('transferFrom is not locked during lock up period');
-        }).catch(function(err) {
-            assertRevert(err); // Assert revert on EVM
             done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 
@@ -102,6 +112,16 @@ contract('CerttifyToken', function(accounts) {
             return token.lockup.call();
         }).then(function(lockup) {
             assert(!lockup, 'Lockup is not removed after unlock() call');
+            done();
+        }).catch(function(err) {
+            done(err);
+        });
+    });
+
+    it('Only owner can unlock token', function(done) {
+        assertRevert(token.unlock({
+            from: accounts[1]
+        })).then(function() {
             done();
         }).catch(function(err) {
             done(err);
@@ -144,17 +164,27 @@ contract('CerttifyToken', function(accounts) {
     it('Cannot burn more than what you have', function(done) {
         token.unlock().then(function() {
             // Wait for contract deployment, and call burn() to burn 6e+26 token (more than total supply)
-            return token.burn(web3.toBigNumber('6e+26'), "SOME_MESSAGE");
-        }).catch(function(err) {
+            return assertRevert(token.burn(web3.toBigNumber('6e+26'), "SOME_MESSAGE"));
+        }).then(function() {
             // Expect a error
             // Try to burn token from address with no token
-            return token.burn(web3.toBigNumber('1'), "SOME_MESSAGE", {
+            return assertRevert(token.burn(web3.toBigNumber('1'), "SOME_MESSAGE", {
                 'from': accounts[1]
-            });
-        }).catch(function(err) {
-            // Expect a error
-            assertRevert(err);
+            }));
+        }).then(function() {
             done();
+        }).catch(function(err) {
+            done(err);
+        });
+    });
+
+    it('Cannot burn 0 token', function(done) {
+        token.unlock().then(function() {
+            return assertRevert(token.burn(0, "SOME_MESSAGE"));
+        }).then(function() {
+            done();
+        }).catch(function(err) {
+            done(err);
         });
     });
 

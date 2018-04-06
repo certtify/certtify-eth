@@ -169,6 +169,25 @@ contract('CerttifyCrowdsale', function(accounts) {
                 done(err);
             });;
         });
+
+        it('Cannot deploy contract with 0x0 address', function(done) {
+            const emptyAddress = "0x0000000000000000000000000000000000000000";
+            assertRevert(Crowdsale.new(emptyAddress, _owner, _bountyAdmin, {
+                from: accounts[1]
+            })).then(function() {
+                return assertRevert(Crowdsale.new(_wallet, emptyAddress, _bountyAdmin, {
+                    from: accounts[1]
+                }));
+            }).then(function() {
+                return assertRevert(Crowdsale.new(_wallet, _owner, emptyAddress, {
+                    from: accounts[1]
+                }));
+            }).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
     
         it('Handling a valid pre-sale call', function(done) {
             // Legit pre-sale function call, buy 10000 Certtify token in pre-sale to accounts[1], called by contractOwner
@@ -248,6 +267,16 @@ contract('CerttifyCrowdsale', function(accounts) {
     
         it('Cannot pre-sale to address(0)', function(done) {
             assertRevert(instance.buyTokensPreSale('0x0000000000000000000000000000000000000000', 1, {
+                from: accounts[0]
+            })).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Cannot pre-sale 0 token', function(done) {
+            assertRevert(instance.buyTokensPreSale(accounts[1], web3.toBigNumber('0'), {
                 from: accounts[0]
             })).then(function() {
                 done();
@@ -382,6 +411,56 @@ contract('CerttifyCrowdsale', function(accounts) {
             assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
                 from: accounts[1]
             })).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Cannot set unreasonable ICO specification', function(done) {
+            assertRevert(instance.setICOSpec(0, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                from: accounts[0]
+            })).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, 0, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, 0, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, 0, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, 0, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, 0, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, 0, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, 0, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, 0, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, 0, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, 0, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
                 done();
             }).catch(function(err) {
                 done(err);
