@@ -19,12 +19,6 @@ npm install -g ethereumjs-testrpc
 npm install -g truffle
 ```
 
-Then, simply start the testrpc environment.
-
-```
-npm run devnet
-```
-
 After that, simply run the unit test.
 
 ```
