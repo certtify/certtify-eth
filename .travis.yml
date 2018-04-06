@@ -1,4 +1,5 @@
 sudo: required
+warnings_are_error: false
 dist: trusty
 language: node_js
 node_js:
