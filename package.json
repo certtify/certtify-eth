@@ -8,11 +8,12 @@
     "test:core": "./node_modules/.bin/npm-run-all --serial test:delay test:actual",
     "test:delay": "node ./node_modules/npm-delay 5000",
     "test:actual": "truffle test --log --network \"private\"",
-    "test:devnet": "testrpc -u 0 -u 1 -u 2 -u 3 -u 4 --account=\"0x88bcaa7843551bce0b43cbac1eb835e1950804e9f7fe3ca67968022c32e3a3b5, 10000000000000000000000000\" --account=\"0x0881e419a4c76159121d6125f282388693c951e9f7f15df90b15a01cd9525023, 10000000000000000000000000\" --account=\"0xa03fc54f57c36c25289606d42047324838da293dcb5a280e1420d883de4bf1de, 10000000000000000000000000\" --account=\"0xec89cff06d98420b67cf350c4f67186cd908b4b55f45fa6b73f6876d158add46, 10000000000000000000000000\" --account=\"0xdb5c045f078439cb44666c986b78fe3aa39009a6bbd38aa13db9c8fedc95266e, 10000000000000000000000000\" --account=\"0x23635accbd4a0d6a3ce493df31c6b46a564f52b63be20180185462733cea6b89, 0\"",
+    "test:devnet": "ganache-cli -u 0 -u 1 -u 2 -u 3 -u 4 --account=\"0x88bcaa7843551bce0b43cbac1eb835e1950804e9f7fe3ca67968022c32e3a3b5, 10000000000000000000000000\" --account=\"0x0881e419a4c76159121d6125f282388693c951e9f7f15df90b15a01cd9525023, 10000000000000000000000000\" --account=\"0xa03fc54f57c36c25289606d42047324838da293dcb5a280e1420d883de4bf1de, 10000000000000000000000000\" --account=\"0xec89cff06d98420b67cf350c4f67186cd908b4b55f45fa6b73f6876d158add46, 10000000000000000000000000\" --account=\"0xdb5c045f078439cb44666c986b78fe3aa39009a6bbd38aa13db9c8fedc95266e, 10000000000000000000000000\" --account=\"0x23635accbd4a0d6a3ce493df31c6b46a564f52b63be20180185462733cea6b89, 0\"",
     "deploy": "truffle migrate --reset -f 2 --network \"mainnet\"",
     "deploy:ropsten": "truffle migrate --reset -f 2 --network \"ropsten\"",
+    "coverage": "./node_modules/.bin/npm-run-all --parallel coverage:net coverage:actual --race",
     "coverage:net": "./node_modules/.bin/testrpc-sc --gasLimit 80000000 -u 0 -u 1 -u 2 -u 3 -u 4 --account=\"0x88bcaa7843551bce0b43cbac1eb835e1950804e9f7fe3ca67968022c32e3a3b5, 10000000000000000000000000\" --account=\"0x0881e419a4c76159121d6125f282388693c951e9f7f15df90b15a01cd9525023, 10000000000000000000000000\" --account=\"0xa03fc54f57c36c25289606d42047324838da293dcb5a280e1420d883de4bf1de, 10000000000000000000000000\" --account=\"0xec89cff06d98420b67cf350c4f67186cd908b4b55f45fa6b73f6876d158add46, 10000000000000000000000000\" --account=\"0xdb5c045f078439cb44666c986b78fe3aa39009a6bbd38aa13db9c8fedc95266e, 10000000000000000000000000\" --account=\"0x23635accbd4a0d6a3ce493df31c6b46a564f52b63be20180185462733cea6b89, 0\"",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "coverage:actual": "./node_modules/.bin/solidity-coverage"
   },
   "keywords": [
     "ethereum",
@@ -21,7 +22,7 @@
   "author": "Ken Sze",
   "license": "Apache-2.0",
   "dependencies": {
-    "solc": "0.4.18",
+    "solc": "0.4.21",
     "truffle-hdwallet-provider": "0.0.3",
     "zeppelin-solidity": "^1.7.0"
   },
