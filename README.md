@@ -1,4 +1,7 @@
-# Certtify Ethereum Contract
+# Certtify Ethereum Contract 
+
+[![Build Status](https://travis-ci.org/certtify/certtify-eth.svg?branch=master)](https://travis-ci.org/certtify/certtify-eth)
+[![Coverage Status](https://coveralls.io/repos/github/certtify/certtify-eth/badge.svg)](https://coveralls.io/github/certtify/certtify-eth)
 
 This is the code for the Ethereum smartcontract responsible for Certtify crowdsale.
 
