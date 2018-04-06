@@ -95,6 +95,8 @@ contract('CerttifyCrowdsale', function(accounts) {
             promises.push(instance.MAX_ALLOWED_TOTAL.call());
             promises.push(instance.weiRaised.call());
             promises.push(instance.tokenSold.call());
+            promises.push(instance.icoSpecConfirmed.call());
+            promises.push(instance.startTimeStage1.call());
             Promise.all(promises).then(function(_contractVars) {
                 // Verify all contract variable one-by-one
                 contractVars = _contractVars;
@@ -121,6 +123,12 @@ contract('CerttifyCrowdsale', function(accounts) {
                 assert.equal(weiRaised, 0, "Initial weiRaised is not 0");
                 var tokenSold = contractVars[8].valueOf();
                 assert.equal(tokenSold, 0, "Initial tokenSold is not 0");
+                // Verify that ICO specification is not confirmed by default
+                var icoSpecConfirmed = contractVars[9].valueOf();
+                assert(!icoSpecConfirmed, "ICO specification is confirmed by default");
+                // Verify the startTimeStage1 is set as a large value by default
+                var startTimeStage1 = contractVars[10].valueOf();
+                assert.equal(startTimeStage1, 4102444799, 'Start time of stage 1 is not set as expected'); 
                 done();
             }).catch(function(err) {
                 done(err);
@@ -257,6 +265,192 @@ contract('CerttifyCrowdsale', function(accounts) {
                 done(err);
             });
         });
+
+        it('Can set ICO specification', function(done) {
+            const maxSupply = web3.toBigNumber('55e25'); // 5.5e8 * 1e18
+            instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                from: accounts[0]
+            }).then(function() {
+                // Get all public contract variables
+                var promises = [];
+                promises.push(instance.token.call());
+                promises.push(instance.startTimeStage1.call());
+                promises.push(instance.startTimeStage2.call());
+                promises.push(instance.startTimeStage3.call());
+                promises.push(instance.endTime.call());
+                promises.push(instance.wallet.call());
+                promises.push(instance.owner.call());
+                promises.push(instance.rateStage1.call());
+                promises.push(instance.rateStage2.call());
+                promises.push(instance.rateStage3.call());
+                promises.push(instance.MAX_ALLOWED_PRE_SALE.call());
+                promises.push(instance.MAX_ALLOWED_BY_STAGE_1.call());
+                promises.push(instance.MAX_ALLOWED_BY_STAGE_2.call());
+                promises.push(instance.MAX_ALLOWED_TOTAL.call());
+                promises.push(instance.weiRaised.call());
+                promises.push(instance.tokenSold.call());
+                promises.push(instance.founderTokenUnlockPhase1.call());
+                promises.push(instance.founderTokenUnlockPhase2.call());
+                promises.push(instance.founderTokenUnlockPhase3.call());
+                promises.push(instance.founderTokenUnlockPhase4.call());
+                promises.push(instance.founderTokenWithdrawnPhase1.call());
+                promises.push(instance.founderTokenWithdrawnPhase2.call());
+                promises.push(instance.founderTokenWithdrawnPhase3.call());
+                promises.push(instance.founderTokenWithdrawnPhase4.call());
+                promises.push(instance.founderWithdrawablePhase1.call());
+                promises.push(instance.founderWithdrawablePhase2.call());
+                promises.push(instance.founderWithdrawablePhase3.call());
+                promises.push(instance.founderWithdrawablePhase4.call());
+                promises.push(instance.icoSpecConfirmed.call());
+                promises.push(instance.startTimeStage1.call());
+                return Promise.all(promises);
+            }).then(function(_contractVars) {
+                // Verify all contract variable one-by-one
+                contractVars = _contractVars;
+                // Verify the CerttifyToken is deployed
+                var tokenAddress = contractVars[0];
+                var tokenInstance = CerttifyToken.at(tokenAddress);
+                assert.isNotNull(tokenInstance, null, "Crowdsale contract did not deploy the CerttifyToken contact");
+                // Verrify that timestamps are set correctly
+                var startStage1 = contractVars[1].valueOf();
+                assert.equal(startStage1, _timestampStage1, "Start time of stage 1 ICO is not set correctly");
+                var startStage2 = contractVars[2].valueOf();
+                assert.equal(startStage2, _timestampStage2, "Start time of stage 2 ICO is not set correctly");
+                var startStage3 = contractVars[3].valueOf();
+                assert.equal(startStage3, _timestampStage3, "Start time of stage 3 ICO is not set correctly");
+                var endICO = contractVars[4].valueOf();
+                assert.equal(endICO, _timestampEndTime, "End time of ICO is not set correctly");
+                // Verify ETH collection address and owner is set
+                var ethWallet = contractVars[5];
+                assert.equal(ethWallet, _wallet, "ETH collection wallet is not set correctly");
+                var owner = contractVars[6];
+                assert.equal(owner, accounts[0], "Contract owner is not set correctly");
+                // Verify wei rate is converted into wei rate correctly
+                var rateStage1 = contractVars[7].valueOf();
+                assert.equal(rateStage1, web3._extend.utils.toWei(_weiCostOfTokenStage1, 'wei'), "Rate of stage 1 ICO is not set correctly");
+                var rateStage2 = contractVars[8].valueOf();
+                assert.equal(rateStage2, web3._extend.utils.toWei(_weiCostOfTokenStage2, 'wei'), "Rate of stage 2 ICO is not set correctly");
+                var rateStage3 = contractVars[9].valueOf();
+                assert.equal(rateStage3, web3._extend.utils.toWei(_weiCostOfTokenStage3, 'wei'), "Rate of stage 3 ICO is not set correctly");
+                // Verify cap of each stage is set correctly
+                var capPreSale = contractVars[10].valueOf();
+                assert.equal(capPreSale, maxSupply.mul(0.35), "Pre-sale cap is not set correctly");
+                var capStage1 = contractVars[11].valueOf();
+                assert.equal(capStage1, maxSupply.mul(0.5), "Stage-1 cap is not set correctly");
+                var capStage2 = contractVars[12].valueOf();
+                assert.equal(capStage2, maxSupply.mul(0.65), "Stage-2 cap is not set correctly");
+                var capStage3 = contractVars[13].valueOf();
+                assert.equal(capStage3, maxSupply.mul(0.75), "Stage-3 cap is not set correctly");
+                // Verify weiRaised and tokenSold is 0 before we do anything with it
+                var weiRaised = contractVars[14].valueOf();
+                assert.equal(weiRaised, 0, "Initial weiRaised is not 0");
+                var tokenSold = contractVars[15].valueOf();
+                assert.equal(tokenSold, 0, "Initial tokenSold is not 0");
+                var founderTokenUnlockPhase1 = contractVars[16].valueOf();
+                assert.equal(founderTokenUnlockPhase1.valueOf(), _founderTokenUnlockPhase1, "Phase 1 unlock time of founders' token is not set correctly");
+                var founderTokenUnlockPhase2 = contractVars[17].valueOf();
+                assert.equal(founderTokenUnlockPhase2.valueOf(), _founderTokenUnlockPhase2, "Phase 2 unlock time of founders' token is not set correctly");
+                var founderTokenUnlockPhase3 = contractVars[18].valueOf();
+                assert.equal(founderTokenUnlockPhase3.valueOf(), _founderTokenUnlockPhase3, "Phase 3 unlock time of founders' token is not set correctly");
+                var founderTokenUnlockPhase4 = contractVars[19].valueOf();
+                assert.equal(founderTokenUnlockPhase4.valueOf(), _founderTokenUnlockPhase4, "Phase 4 unlock time of founders' token is not set correctly");
+                var founderTokenWithdrawnPhase1 = contractVars[20].valueOf();
+                assert(!founderTokenWithdrawnPhase1, "Founders' token withdrawn status in phase 1 is not false by default");
+                var founderTokenWithdrawnPhase2 = contractVars[21].valueOf();
+                assert(!founderTokenWithdrawnPhase2, "Founders' token withdrawn status in phase 2 is not false by default");
+                var founderTokenWithdrawnPhase3 = contractVars[22].valueOf();
+                assert(!founderTokenWithdrawnPhase3, "Founders' token withdrawn status in phase 3 is not false by default");
+                var founderTokenWithdrawnPhase4 = contractVars[23].valueOf();
+                assert(!founderTokenWithdrawnPhase4, "Founders' token withdrawn status in phase 4 is not false by default");
+                var founderWithdrawablePhase1 = contractVars[24].valueOf();
+                assert.equal(founderWithdrawablePhase1.valueOf(), 0, "Amount of token withdrawable by founders in phase 1 is not 0 by default");
+                var founderWithdrawablePhase2 = contractVars[25].valueOf();
+                assert.equal(founderWithdrawablePhase2.valueOf(), 0, "Amount of token withdrawable by founders in phase 2 is not 0 by default");
+                var founderWithdrawablePhase3 = contractVars[26].valueOf();
+                assert.equal(founderWithdrawablePhase3.valueOf(), 0, "Amount of token withdrawable by founders in phase 3 is not 0 by default");
+                var founderWithdrawablePhase4 = contractVars[27].valueOf();
+                assert.equal(founderWithdrawablePhase4.valueOf(), 0, "Amount of token withdrawable by founders in phase 4 is not 0 by default");
+                var icoSpecConfirmed = contractVars[28].valueOf();
+                assert(!icoSpecConfirmed, "ICO specification is confirmed by default");
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Only owner can set ICO specification', function(done) {
+            assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                from: accounts[1]
+            })).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Can confirm ICO specification', function(done) {
+            instance.confirmICOSpec({
+                from: accounts[0]
+            }).then(function() {
+                return instance.icoSpecConfirmed.call();
+            }).then(function(specConfirmed) {
+                assert(specConfirmed, 'ICO spec cannot be confirmed');
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Only owner can confirm ICO sppecification', function(done) {
+            assertRevert(instance.confirmICOSpec({
+                from: accounts[1]
+            })).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Cannot set ICO specification after confirmation', function(done) {
+            instance.confirmICOSpec({
+                from: accounts[0]
+            }).then(function() {
+                return assertRevert(instance.setICOSpec(_timestampStage1, _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                    from: accounts[0]
+                }));
+            }).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        });
+
+        it('Cannot buy token in public sale before confirmation', function(done) {
+            // Set phrase 1 to have started without confirming the specification
+            instance.setICOSpec(getTimestamp(0), _timestampStage2, _timestampStage3, _timestampEndTime, _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4, {
+                from: accounts[0]
+            }).then(function() {
+                return new Promise(function(resolve, reject) {
+                    web3.eth.sendTransaction({
+                        from: accounts[0],
+                        to: instance.address,
+                        value: web3._extend.utils.toWei(1, 'ether'),
+                        gas: 500000
+                    }, function(err) {
+                        if (err) {
+                            resolve();
+                        }
+                        else {
+                            reject('ICO can proceed before confirmation');
+                        }
+                    });
+                });
+            }).then(function() {
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+        })
 
     });
 
