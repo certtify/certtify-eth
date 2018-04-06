@@ -1084,11 +1084,11 @@ contract('CerttifyCrowdsale', function(accounts) {
             confirmSpec(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.2), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, _founderTokenUnlockPhase1, _founderTokenUnlockPhase2, _founderTokenUnlockPhase3, _founderTokenUnlockPhase4).then(function() {
                 return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(tokenBought, _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             }).then(function() {
-                // Wait for 10 seconds for ICO to end
+                // Wait for 15 seconds for ICO to end
                 return new Promise(function(resolve, reject) {
                     setTimeout(function() {
                         resolve();
-                    }, 10 * 1000);
+                    }, 15 * 1000);
                 });
             }).then(function() {
                 // Force mine a block before calling hasEnded() to update block.timestamp
@@ -1227,11 +1227,11 @@ contract('CerttifyCrowdsale', function(accounts) {
             confirmSpec(getTimestamp(0), getTimestamp(0), getTimestamp(0), getTimestamp(0.1), _weiCostOfTokenStage1, _weiCostOfTokenStage2, _weiCostOfTokenStage3, getTimestamp(0.2), getTimestamp(0.2), getTimestamp(0.2), getTimestamp(0.2)).then(function() {
                 return purchaseConfirmSale(instance, accounts[1], _wallet, calEther(tokenBought, _weiCostOfTokenStage3), _weiCostOfTokenStage3);
             }).then(function() {
-                // Wait for 10 seconds for ICO to end
+                // Wait for 15 seconds for ICO to end
                 return new Promise(function(resolve, reject) {
                     setTimeout(function() {
                         resolve();
-                    }, 10 * 1000);
+                    }, 15 * 1000);
                 });
             }).then(function() {
                 // Call postICO
