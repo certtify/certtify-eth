@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/certtify/certtify-eth.svg?branch=master)](https://travis-ci.org/certtify/certtify-eth)
 [![Coverage Status](https://coveralls.io/repos/github/certtify/certtify-eth/badge.svg)](https://coveralls.io/github/certtify/certtify-eth)
 
-This is the code for the Ethereum smartcontract responsible for Certtify crowdsale.
+This repository store the code for the Ethereum smart contract responsible for Certtify protocol and its crowdsale.
 
 Contracts are developed with reference to [zeppelin-solidity](https://github.com/OpenZeppelin/zeppelin-solidity).
 
