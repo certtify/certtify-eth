@@ -59,11 +59,11 @@ contract CerttifyCrowdsale is Ownable {
     uint256 public constant MAX_ALLOWED_STAGE_2 = 82500000 * (10 ** DECIMALS);
     // Maximum CTF token available in ICO phase 3, equates to 10% of total supply
     uint256 public constant MAX_ALLOWED_STAGE_3 = 55000000 * (10 ** DECIMALS);
-    // Maximum CTF token available BY ICO phase 1, equates to 25% of total supply
+    // Maximum CTF token available BY ICO phase 1, equates to 50% of total supply
     uint256 public MAX_ALLOWED_BY_STAGE_1 = MAX_ALLOWED_PRE_SALE.add(MAX_ALLOWED_STAGE_1);
-    // Maximum CTF token available BY ICO phase 2, equates to 47% of total supply
+    // Maximum CTF token available BY ICO phase 2, equates to 65% of total supply
     uint256 public MAX_ALLOWED_BY_STAGE_2 = MAX_ALLOWED_BY_STAGE_1.add(MAX_ALLOWED_STAGE_2);
-    // Maximum CTF token available BY ICO phase 3, equates to 72% of total supply
+    // Maximum CTF token available BY ICO phase 3, equates to 75% of total supply
     uint256 public MAX_ALLOWED_TOTAL =  MAX_ALLOWED_BY_STAGE_2.add(MAX_ALLOWED_STAGE_3);
 
     // Amount of wei raised so far
